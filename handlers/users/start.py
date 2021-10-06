@@ -1,15 +1,15 @@
 from aiogram import types
+from data import config
+from keyboards.default.main_keyboard import keyboard
 # from aiogram.dispatcher.filters.builtin import CommandStart
 from loader import bot
 from loguru import logger
-from data import config
-from keyboards.default.main_keyboard import keyboard
 
+    # user_channel_status = await  ('-1001288333015', message.from_user.id)
 
 async def bot_start(message: types.Message):
     user_channel_status= await bot.get_chat_member(chat_id=config.CHANNEL_ID,user_id=message.from_user.id)
 
-    # user_channel_status = await  ('-1001288333015', message.from_user.id)
     if user_channel_status["status"] != 'left':
         logger.info('c каналом все гуд')
         await message.answer(f"Привет, {message.from_user.full_name}!")

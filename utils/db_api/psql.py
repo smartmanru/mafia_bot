@@ -14,7 +14,6 @@
 import psycopg2
 from data.config import DATABASE_URL
 
-
 # def get_text_messages(message):
     # us_id = message.from_user.id
     # us_name = message.from_user.first_name

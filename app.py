@@ -1,6 +1,8 @@
+from typing import Any
+
 from aiogram import Dispatcher
 from aiogram.utils import executor
-
+from aiogram_dialog import  DialogRegistry, Window
 import filters
 import handlers
 import middlewares
@@ -15,10 +17,9 @@ async def on_startup(dispatcher:Dispatcher):
     middlewares.setup(dispatcher)
     filters.setup(dispatcher)
     handlers.users.setup(dispatcher)
+    DialogRegistry(dispatcher)
     await set_default_commands(dispatcher)
     # await utils.start()
-
-    # Уведомляет про запуск
     await on_startup_notify(dispatcher)
 
 

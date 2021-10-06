@@ -1,5 +1,5 @@
 from aiogram import Dispatcher, filters
-from . import afisha, help, start, wind
+from . import help, start, wind
 
 def setup(dp: Dispatcher):
     dp.register_message_handler(help.bot_help, filters.CommandHelp())

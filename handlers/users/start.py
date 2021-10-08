@@ -15,7 +15,7 @@ async def bot_start(message: types.Message):
         await message.answer(f"Привет, {message.from_user.full_name}!")
         key=await keyboard([["Правила"],["Афиша","Рейтинг"]])
         await message.answer(
-        "Test",
+        "Добро пожаловать в Бота Maffia by @Zelova",
         reply_markup=key)
         
     else:

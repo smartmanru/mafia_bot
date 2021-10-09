@@ -1,116 +1,126 @@
-import asyncio
 import logging
-from typing import Any
 
-from aiogram import Bot, Dispatcher
+import aiogram.utils.markdown as md
+from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import Data, Dialog, DialogManager, DialogRegistry, Window
-from aiogram_dialog.tools import render_transitions
-from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import (Back, Button, Cancel, Group, Next, Row,
-                                        Start)
-from aiogram_dialog.widgets.text import Const, Format, Multi
+from aiogram.types import ParseMode
+from aiogram.utils import executor
 
-API_TOKEN = "493245391:AAFk2-rnN-qrCsLWJJkNwds9XCLC5v_oa70"
+logging.basicConfig(level=logging.INFO)
+
+API_TOKEN = '493245391:AAFk2-rnN-qrCsLWJJkNwds9XCLC5v_oa70'
 
 
-# name input dialog
+bot = Bot(token=API_TOKEN)
 
-class NameSG(StatesGroup):
-    page = State()
-    input = State()
-    confirm = State()
-
-
-async def name_handler(m: Message, dialog: Dialog, manager: DialogManager):
-    manager.current_context().dialog_data["name"] = m.text
-    await dialog.next(manager)
+# For example use simple MemoryStorage for Dispatcher.
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 
 
-async def get_name_data(dialog_manager: DialogManager, **kwargs):
-    return {
-        "name": dialog_manager.current_context().dialog_data.get("name")
-    }
+# States
+class Form(StatesGroup):
+    name = State()  # Will be represented in storage as 'Form:name'
+    age = State()  # Will be represented in storage as 'Form:age'
+    gender = State()  # Will be represented in storage as 'Form:gender'
 
 
-async def on_finish(c: CallbackQuery, button: Button, manager: DialogManager):
-    await manager.done({"name": manager.current_context().dialog_data["name"]})
+@dp.message_handler(commands='start')
+async def cmd_start(message: types.Message):
+    """
+    Conversation's entry point
+    """
+    # Set state
+    await Form.name.set()
+
+    await message.reply("Hi there! What's your name?")
 
 
-name_dialog = Dialog(
-    Window(
-        Const("What is your name?"),
-        Cancel(),
-        MessageInput(name_handler),
-        state=NameSG.input,
-        preview_add_transitions=[Next()],  # hint for graph rendering
-    ),
-    Window(
-        Format("Your name is `{name}`, it is correct?"),
-        Row(Back(Const("No")), Button(Const("Yes"), id="yes", on_click=on_finish)),
-        state=NameSG.confirm,
-        getter=get_name_data,
-        preview_add_transitions=[Cancel()],  # hint for graph rendering
-    )
-)
+# You can use state '*' if you need to handle all states
+@dp.message_handler(state='*', commands='cancel')
+@dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
+async def cancel_handler(message: types.Message, state: FSMContext):
+    """
+    Allow user to cancel any action
+    """
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+
+    logging.info('Cancelling state %r', current_state)
+    # Cancel state and inform user about it
+    await state.finish()
+    # And remove keyboard (just in case)
+    await message.reply('Cancelled.', reply_markup=types.ReplyKeyboardRemove())
 
 
-# main dialog
-class MainSG(StatesGroup):
-    main = State()
+@dp.message_handler(state=Form.name)
+async def process_name(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['name'] = message.text
+        
+    await Form.next()
+    await message.reply("How old are you?")
 
 
-async def process_result(start_data: Data, result: Any, manager: DialogManager):
-    if result:
-        manager.current_context().dialog_data["name"] = result["name"]
+# Check age. Age gotta be digit
+@dp.message_handler(lambda message: not message.text.isdigit(), state=Form.age)
+async def process_age_invalid(message: types.Message):
+    """
+    If age is invalid
+    """
+    return await message.reply("Age gotta be a number.\nHow old are you? (digits only)")
 
 
-async def get_main_data(dialog_manager: DialogManager, **kwargs):
-    return {
-        "name": dialog_manager.current_context().dialog_data.get("name"),
-    }
+@dp.message_handler(lambda message: message.text.isdigit(), state=Form.age)
+async def process_age(message: types.Message, state: FSMContext):
+    # Update state and data
+    await Form.next()
+    await state.update_data(age=int(message.text))
+
+    # Configure ReplyKeyboardMarkup
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
+    markup.add("Male", "Female")
+    markup.add("Other")
+
+    await message.reply("What is your gender?", reply_markup=markup)
 
 
-async def on_reset_name(c: CallbackQuery, button: Button, manager: DialogManager):
-    del manager.current_context().dialog_data["name"]
+@dp.message_handler(lambda message: message.text not in ["Male", "Female", "Other"], state=Form.gender)
+async def process_gender_invalid(message: types.Message):
+    """
+    In this example gender has to be one of: Male, Female, Other.
+    """
+    return await message.reply("Bad gender name. Choose your gender from the keyboard.")
 
 
-main_menu = Dialog(
-    Window(
-        Multi(
-            Format("Hello, {name}", when="name"),
-            Const("Hello, unknown person", when=lambda data,
-                  whenable, manager: not data["name"]),
-        ),
-        Group(
-            Start(Const("Enter name"), id="set", state=NameSG.input),
-            Button(Const("Reset name"), id="reset",
-                   on_click=on_reset_name, when="name")
-        ),
-        state=MainSG.main,
-        getter=get_main_data,
-    ),
-    on_process_result=process_result,
-)
+@dp.message_handler(state=Form.gender)
+async def process_gender(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['gender'] = message.text
 
+        # Remove keyboard
+        markup = types.ReplyKeyboardRemove()
 
-async def main():
-    # real main
-    logging.basicConfig(level=logging.INFO)
-    storage = MemoryStorage()
-    bot = Bot(token=API_TOKEN)
-    dp = Dispatcher(bot, storage=storage)
-    registry = DialogRegistry(dp)
-    # resets stack and start dialogs on /start command
-    registry.register_start_handler(MainSG.main)
-    registry.register(name_dialog)
-    registry.register(main_menu)
-    render_transitions(registry)  # render graph with current transtions
+        # And send message
+        await bot.send_message(
+            message.chat.id,
+            md.text(
+                md.text('Hi! Nice to meet you,', md.bold(data['name'])),
+                md.text('Age:', md.code(data['age'])),
+                md.text('Gender:', data['gender']),
+                sep='\n',
+            ),
+            reply_markup=markup,
+            parse_mode=ParseMode.MARKDOWN,
+        )
 
-    await dp.start_polling()
+    # Finish conversation
+    await state.finish()
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    executor.start_polling(dp, skip_updates=True)

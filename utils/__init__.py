@@ -8,6 +8,5 @@ __all__ = [
     "db_api",
     "misc",
     "on_startup_notify",
-    "setup_logger",
-    "start"
+    "setup_logger"
 ]

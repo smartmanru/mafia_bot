@@ -16,3 +16,4 @@ from aiogram import Dispatcher
 def setup(dp: Dispatcher):
     dp.middleware.setup(LoggingMiddleware())
     logger.info('Middlewares are successfully configured')
+

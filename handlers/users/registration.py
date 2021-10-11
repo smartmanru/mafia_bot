@@ -4,7 +4,7 @@ import random
 import typing
 import uuid
 from re import M
-
+from utils.db_api.psql import db_reg
 from aiogram import types
 from aiogram.dispatcher import FSMContext, storage
 from aiogram.dispatcher.filters.state import State, StatesGroup
@@ -14,7 +14,7 @@ from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
 # from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils.callback_data import CallbackData
 from loader import bot
-from utils.logger import logging as logger
+from utils.logger import logging as logger, msg_info as dml
 
 
 class User(StatesGroup):
@@ -32,6 +32,7 @@ cb_us = CallbackData('data', 'action')
 
 
 async def cancel_handler(msg: Message, state: FSMContext):
+    logger.info(await state.get_state())
     current_state = await state.get_state()
     if current_state is None:
         return
@@ -43,20 +44,27 @@ async def cancel_handler(msg: Message, state: FSMContext):
 
 
 async def settings(msg: Message, state: FSMContext):
+    dml(msg)
+    logger.info(await state.get_state())
     await msg.answer('Введите Фамилию Имя')
     await User.page.set()
     await User.next()
 
 
 async def fio(msg: types.Message, state: FSMContext):
-    logger.info(User.page)
+    dml(msg)
+
+    logger.info(await state.get_state())
     async with state.proxy() as data:
         data['fio'] = msg.text
     await msg.answer('Введите Город')
+
     await User.next()
 
 
 async def city(msg: types.Message, state: FSMContext):
+    dml(msg)
+    logger.info(await state.get_state())
     async with state.proxy() as data:
         data['city'] = msg.text
     await msg.answer('Введите ваш возраст')
@@ -64,13 +72,24 @@ async def city(msg: types.Message, state: FSMContext):
 
 
 async def age(msg: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['age'] = msg.text
-    await msg.answer('Введите Ник для мафии')
-    await User.next()
+    try:
+        int(msg.text)
+        dml(msg)
+        logger.info(await state.get_state())
+        await msg.answer('Введите Ник для мафии')
+        await User.next()
+        async with state.proxy() as data:
+            data['age'] = msg.text
+    except ValueError:
+        logger.info("Это не число")
+        await msg.answer("Введите ваш возраст цифрами")
+    dml(msg)
+    logger.info(await state.get_state())
 
 
 async def nick(msg: types.Message, state: FSMContext):
+    dml(msg)
+    logger.info(await state.get_state())
     async with state.proxy() as data:
         data['mf_nn'] = msg.text
     await msg.answer('Введите Вашу профессию')
@@ -78,6 +97,8 @@ async def nick(msg: types.Message, state: FSMContext):
 
 
 async def prof(msg: Message, state: FSMContext):
+    dml(msg)
+    logger.info(await state.get_state())
     async with state.proxy() as data:
         data['proof'] = msg.text
     await msg.answer('Ваш ежемесячный доход от ')
@@ -85,15 +106,24 @@ async def prof(msg: Message, state: FSMContext):
 
 
 async def dohod(msg: types.Message, state: FSMContext):
+    dml(msg)
+    logger.info(await state.get_state())
     async with state.proxy() as data:
         data['dohod'] = msg.text
     markup_request = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
         KeyboardButton('Отправить свой контакт ☎️', request_contact=True))
-    await msg.answer('Ведите ваш номер телефона', reply_markup=markup_request)
+    await msg.answer('Нажми на кнопку "Отправить свой контакт☎️"', reply_markup=markup_request)
     await User.next()
 
 
+async def ph_num_wrong(msg: types.Message, state: FSMContext):
+    markup_request = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
+        KeyboardButton('Отправить свой контакт ☎️', request_contact=True))
+    await msg.answer('Пока не нажмешь-дальше не пойдешь"', reply_markup=markup_request)
+
+
 async def ph_num(msg: types.Contact, state: FSMContext):
+    logger.info(await state.get_state())
     if msg.content_type == 'contact':
         ph_num = msg.contact.phone_number
     else:
@@ -113,12 +143,17 @@ async def ph_num(msg: types.Contact, state: FSMContext):
     b = []
     l = []
     for k in data:
-        b.append(data)
+        b.append(k)
         l.append(data[k])
-    logger.info(b+l)
-    u = b+l
-    k = str(u)
-    await msg.answer(k, reply_markup=ReplyKeyboardRemove)
+    logger.info(l)
+    k = {}
+    for q in range(7):
+        k[b[q]] = l[q]
+    logger.info(k)
+    # await msg.answer(k, reply_markup=ReplyKeyboardRemove())
+    db_reg(msg.from_user.id, k.get("fio"), k.get("city"), k.get("age"), k.get(
+        "mf_nn"), k.get("proof"), k.get("dohod"), k.get("ph_num"))
+
     await state.finish()
 
 

@@ -16,10 +16,10 @@ from data.config import DATABASE_URL
 
 
 # def get_text_messages(message):
-    # us_id = message.from_user.id
-    # us_name = message.from_user.first_name
-    # us_sname = message.from_user.last_name
-    # username = message.from_user.username
+# us_id = message.from_user.id
+# us_name = message.from_user.first_name
+# us_sname = message.from_user.last_name
+# username = message.from_user.username
 #     time_msg = [str(message.date.year), str(message.date.month), str(message.date.day), str(message.date.hour),
 #                 str(message.date.minute), str(message.date.second)]
 #     time = "-".join(time_msg)
@@ -39,13 +39,11 @@ from data.config import DATABASE_URL
 #     cursor.close()
 #     conn.close()
 
-
-
-    # t_id=message.from_user.id
-    # t_nickname=message.from_user.username
-    # t_fn=message.from_user.first_name
-    # t_sn=message.from_user.last_name
-    # "subscriber_channel" bool,
+# t_id=message.from_user.id
+# t_nickname=message.from_user.username
+# t_fn=message.from_user.first_name
+# t_sn=message.from_user.last_name
+# "subscriber_channel" bool,
 #     "FIO" text,
 #     "city" text,
 #     "age" text,
@@ -78,4 +76,38 @@ def select_psql(select):
     cursor.close()
     conn.close()
 
+    return row
+
+
+def db_reg(tg_id: int, fio: str, city: str, age: int, mf_nn: str, proof: str, dohod: str, ph_num: int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor = conn.cursor()
+    cursor.execute(
+        'UPDATE mafiabot.user set fi_reg=%s, city=%s, age=%s, nickname_mafia=%s, proffesion=%s, dohod=%s, phone_number=%s WHERE telegram_id=%s', (fio, city, age, mf_nn, proof, dohod, ph_num, tg_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def db_first(tg_id: int, tg_nick: str, tg_fio: str,):
+
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO mafiabot.user (telegram_id, telegram_nickname, fi_tg) VALUES(%s, %s, %s)', (tg_id, tg_nick, tg_fio))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def db_user(tg_id: int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor.execute(
+        "select telegram_id from mafiabot.user where mafiabot.user.telegram_id = %s;", (tg_id,))
+    row = cursor.fetchall()
+    cursor.close()
+    conn.close()
     return row

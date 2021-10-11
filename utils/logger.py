@@ -28,3 +28,8 @@ def setup_logger(level: Union[str, int] = "INFO", ignored: List[str] = ""):
     for ignore in ignored:
         logger.disable(ignore)
     logger.info('Logging is successfully configured')
+
+
+def msg_info(msg):
+    logger.info("id="+str(msg.message_id)+' text='+msg.text +
+                " 11msg.from="+str(msg.from_user.username))

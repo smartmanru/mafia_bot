@@ -10,7 +10,7 @@ from utils.notify_admins import on_startup_notify
 from utils.set_bot_commands import set_default_commands
 
 
-async def on_startup(dispatcher:Dispatcher):
+async def on_startup(dispatcher: Dispatcher):
     # Устанавливаем дефолтные команды
     middlewares.setup(dispatcher)
     filters.setup(dispatcher)
@@ -23,8 +23,6 @@ async def on_startup(dispatcher:Dispatcher):
 
 
 if __name__ == '__main__':
-    utils.setup_logger("DEBUG", ["sqlalchemy.engine", "aiogram.bot.api"])
+    utils.setup_logger("INFO", ["sqlalchemy.engine", "aiogram.bot.api"])
 
-    executor.start_polling(dp, on_startup=on_startup,skip_updates=False)
-
-
+    executor.start_polling(dp, on_startup=on_startup, skip_updates=False)

@@ -26,6 +26,7 @@ class User(StatesGroup):
     proof = State()
     dohod = State()
     ph_num = State()
+    allright = State()
 
 
 cb_us = CallbackData('data', 'action')
@@ -41,6 +42,14 @@ async def cancel_handler(msg: Message, state: FSMContext):
     await state.finish()
     # And remove keyboard (just in case)
     await msg.reply('Отменено', reply_markup=types.ReplyKeyboardRemove())
+
+
+async def reg_cb(query: types.CallbackQuery, callback: Message, state: FSMContext):
+    dml(callback.message)
+    logger.info(await state.get_state())
+    await bot.send_message(query.message.chat.id, 'Введите Фамилию Имя')
+    await User.page.set()
+    await User.next()
 
 
 async def settings(msg: Message, state: FSMContext):
@@ -83,8 +92,8 @@ async def age(msg: types.Message, state: FSMContext):
     except ValueError:
         logger.info("Это не число")
         await msg.answer("Введите ваш возраст цифрами")
-    dml(msg)
-    logger.info(await state.get_state())
+        dml(msg)
+        logger.info(await state.get_state())
 
 
 async def nick(msg: types.Message, state: FSMContext):
@@ -132,34 +141,71 @@ async def ph_num(msg: types.Contact, state: FSMContext):
         data['ph_num'] = ph_num
 
     inline_btn_1 = InlineKeyboardButton(
-        "🖌Изменить🖌", callback_data=cb_us.new(action='edit'))
+        "⬆️Вернутся назад⬆️", callback_data=cb_us.new(action='edit'))
     inline_btn_2 = InlineKeyboardButton(
-        "☑️Все Ок☑️", callback_data=cb_us.new(action='ok'))
-    inline_btn_3 = InlineKeyboardButton(
-        "❌Отменить❌", callback_data=cb_us.new(action='cancel'))
+        "🆗Отправить🆗", callback_data=cb_us.new(action='ok'))
+    # inline_btn_3 = InlineKeyboardButton(
+
+    # "❌Отменить❌", callback_data=cb_us.new(action='cancel')
+    # )
     inline_kb1 = InlineKeyboardMarkup().add(
-        inline_btn_1, inline_btn_2, inline_btn_3)
+        inline_btn_1, inline_btn_2)
+
     await msg.answer("Проверьте ваши данные: \nФИ: "+data['fio']+"\nГород: "+data['city']+"\nВозраст: "+data['age']+"\nНикнейм для мафии: "+data['mf_nn']+"\nПрофессия: "+data['proof']+"\nДоход От "+data['dohod']+"\nНомер телефона: "+data['ph_num']+"\n\nВаш профиль телеграмма и ваше фото будет использоваться в списке участников оплатившую данную игру.\n \nВсе верно?", reply_markup=inline_kb1)
+    await User.next()
+    logger.info(await state.get_state())
+
     b = []
     l = []
     for k in data:
         b.append(k)
         l.append(data[k])
-    logger.info(l)
     k = {}
     for q in range(7):
         k[b[q]] = l[q]
-    logger.info(k)
+    # logger.info(l)
+    # logger.info(k)
     # await msg.answer(k, reply_markup=ReplyKeyboardRemove())
-    db_reg(msg.from_user.id, k.get("fio"), k.get("city"), k.get("age"), k.get(
-        "mf_nn"), k.get("proof"), k.get("dohod"), k.get("ph_num"))
-
-    await state.finish()
+    # db_reg(msg.from_user.id, k.get("fio"), k.get("city"), k.get("age"), k.get(
+    #     "mf_nn"), k.get("proof"), k.get("dohod"), k.get("ph_num"))
 
 
-async def exec_cb(query: types.CallbackQuery, callback_data: typing.Dict[any, any]):
+async def exec_cb(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
     # await query.answer(query)
+    logger.info(await state.get_state())
+
     callback_data_action = callback_data['action']
     if callback_data_action == "edit":
         logger.info(callback_data_action)
-        set.state
+        async with state.proxy() as data:
+            data = []
+            await User.first()
+            # await bot.delete_message(chat_id=query.message.chat.id,
+                                    #  message_id=query.message.message_id)
+            await bot.edit_message_text(chat_id=query.message.chat.id,
+                                     message_id=query.message.message_id,text="Нажмите:\n/settings - для повторной настройки \n/start для выхода на главную")
+
+            # markup_request = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
+            # KeyboardButton('Отправить свой контакт ☎️', request_contact=True))
+            # await bot.send_message(chat_id=query.message.chat.id,reply_markup=markup_request)
+            return
+    elif callback_data_action == 'ok':
+        b = []
+        l = []
+        async with state.proxy() as data:
+            for k in data:
+                b.append(k)
+                l.append(data[k])
+            logger.info(l)
+            k = {}
+            for q in range(7):
+                k[b[q]] = l[q]
+            logger.info(k)
+            # await msg.answer(k, reply_markup=ReplyKeyboardRemove())
+        db_reg(query.from_user.id, k.get("fio"), k.get("city"), k.get("age"), k.get(
+            "mf_nn"), k.get("proof"), k.get("dohod"), k.get("ph_num"))
+
+    logger.info(await state.get_state())
+
+    await state.finish()
+    logger.info(await state.get_state())

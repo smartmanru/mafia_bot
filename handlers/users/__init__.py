@@ -1,14 +1,22 @@
 
-from aiogram import Dispatcher, filters, types as t
-from aiogram.types import ContentTypes as Ct
+from aiogram import Dispatcher, filters
+from aiogram import types as t
 from aiogram.dispatcher.filters import Text
-from . import help
-from . import start
-from . import afisha
+from aiogram.types import ContentTypes as Ct
+from utils import dialog_cal_callback
+
 # from . import log
+from . import afisha
+from . import afisha as af
+from . import help
 from . import registration as re
-from .registration import User as U, exec_cb, cb_us, settings as reg, cancel_handler as cancel
+from . import start
 # from aiogram.utils.callback_data import CallbackData
+from .afisha import cb_af, inline_timepicker
+from .registration import User as U
+from .registration import cancel_handler as cancel
+from .registration import cb_us, exec_cb
+from .registration import settings as reg
 
 # from . import echo
 
@@ -37,6 +45,19 @@ def setup(dp: Dispatcher):
     # dp.callback_query_handler(func=lambda c: c.data and c.data.startswith('btn'))
     # dp.register_message_handler(log.bot_echo,content_types=Ct.TEXT,state='*', run_task=True)
     dp.register_message_handler(afisha.mp, filters.Text(equals='Афиша'))
-
     dp.register_callback_query_handler(
-        exec_cb, cb_us.filter(action=['ok', 'edit', 'cancel']))
+        exec_cb, cb_us.filter(action=['ok', 'edit', 'cancel']), state=U.allright)
+    dp.register_callback_query_handler(
+        af.cb_bt, cb_af.filter(action=['new']))
+
+    dp.register_message_handler(af.name, state=af.Afs.new)
+    dp.register_message_handler(af.loc, state=af.Afs.name)
+    dp.register_callback_query_handler(
+        af.process_dialog_calendar, dialog_cal_callback.filter(), state=af.Afs.location)
+    dp.register_message_handler(af.mx_user, state=af.Afs.date)
+    dp.callback_query_handler(
+        af.process_dialog_calendar, dialog_cal_callback.filter())
+    dp.register_callback_query_handler(
+        af.cb_handler, inline_timepicker.filter(), state=af.Afs.pick_cal)
+
+    # dp.register_message_handler(af.date, state=af.Afs.users)

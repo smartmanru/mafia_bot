@@ -11,6 +11,7 @@
 #     return b
 
 
+from marshmallow.fields import Date
 import psycopg2
 from data.config import DATABASE_URL
 
@@ -111,3 +112,17 @@ def db_user(tg_id: int):
     cursor.close()
     conn.close()
     return row
+
+
+def afisha_new(date: Date, location: str, decription: str, count: int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO mafiabot.afisha (date, location, decription) VALUES(%s, %s, %s, %s)', (date, location, decription, count))
+    conn.commit()
+    cursor.close()
+    conn.close()
+# def afisha_update
+# def afisha select
+# def subscribe

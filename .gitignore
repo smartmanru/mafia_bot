@@ -132,3 +132,5 @@ dmypy.json
 .vscode/launch.json
 .vscode/settings.json
 .vscode/launch.json
+old_mod/-- mafiabot."user" definition.sql
+.gitignore

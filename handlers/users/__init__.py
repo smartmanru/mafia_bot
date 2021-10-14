@@ -25,7 +25,7 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(cancel, filters.Text(
         equals='cancel', ignore_case=True), state='*')
     dp.register_message_handler(cancel, state='*', commands='cancel')
-    dp.register_message_handler(start.bot_start, filters.CommandStart())
+    dp.register_message_handler(start.bot_start, filters.CommandStart(),state='*')
     # dp.register_message_handler(re.change_state, content_types=Ct.TEXT,state='*')
     dp.register_message_handler(help.bot_help, filters.CommandHelp())
     # dp.register_message_handler(afisha.inline,filters.Regexp("Афиша"))

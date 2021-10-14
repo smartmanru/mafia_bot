@@ -25,7 +25,11 @@ class Afs(StatesGroup):
     pick_cal = State()
     date = State()
     users = State()
+class View(StatesGroup):
+    page=State()
+    
 
+# class afisha()
 
 cb_af = CallbackData('data', 'action')
 

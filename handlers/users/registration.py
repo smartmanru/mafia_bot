@@ -15,6 +15,8 @@ from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
 from aiogram.utils.callback_data import CallbackData
 from loader import bot
 from utils.logger import logging as logger, msg_info as dml
+from keyboards.default.main_keyboard import keyboard
+from utils.utils_kb import create_button as cr_bt,create_keyboard as cr_kb
 
 
 class User(StatesGroup):
@@ -42,6 +44,12 @@ async def cancel_handler(msg: Message, state: FSMContext):
     await state.finish()
     # And remove keyboard (just in case)
     await msg.reply('Отменено', reply_markup=types.ReplyKeyboardRemove())
+    rules=cr_bt("Правила")
+    afisha=cr_bt("Афиша")
+    reit=cr_bt("Рейтинг")
+    settings=cr_bt("Настройки")
+    key = cr_kb(rules, afisha, reit,settings)
+    await msg.answer("Добро пожаловать в Бота Maffia by [@Zelova](https://t.me/MafiaZelova)", parse_mode="Markdown",reply_markup=key, disable_web_page_preview=True)
 
 
 async def reg_cb(query: types.CallbackQuery, callback: Message, state: FSMContext):

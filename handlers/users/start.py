@@ -16,13 +16,9 @@ async def bot_start(m: types.Message, state: FSMContext):
     # sec_name = m.from_user.second_name
     username = str(m.from_user.username)
     photo = await m.from_user.get_profile_photos()
-
     if not db_user(ids):
         db_first(ids, username, fs_name)
-
     user_channel_status = await bot.get_chat_member(chat_id=config.CHANNEL_ID, user_id=m.from_user.id)
-
-    # user_channel_status = await  ('-1001288333015', message.from_user.id)
     if user_channel_status["status"] != 'left':
         logger.info('c каналом все гуд')
         await m.answer(f"Привет, {m.from_user.full_name}!")
@@ -36,4 +32,4 @@ async def bot_start(m: types.Message, state: FSMContext):
         c_il = channel.invite_link
         # logger.info(channel)
         await m.answer(f"{m.from_user.full_name}, у тебя нету подписки на канал "+c_t+" Чтобы подписаться перейди по ссылке "+c_il+"\n \nКак подпишешься - жми снова /start")
-        await state.set_state("not_subs")
+        # await state.set_state("not_subs")

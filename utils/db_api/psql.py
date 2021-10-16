@@ -124,6 +124,13 @@ def afisha_new(dates: datetime, location: str, decription: str, count: str, name
     conn.commit()
     cursor.close()
     conn.close()
+
 # def afisha_update
 # def afisha select
 # def subscribe
+
+
+def get_afisha():
+    b = select_psql(
+        'select  id, name, decription, max_count, location from mafiabot.afisha where "date" > now() order by  "date" asc')
+    return(b)

@@ -51,6 +51,8 @@ def setup(dp: Dispatcher):
     dp.register_callback_query_handler(
         af.cb_bt, cb_af.filter(action=['new']))
 
+    dp.register_callback_query_handler(
+        af.afisha_view, cb_af.filter(action=['view']))
     dp.register_message_handler(af.name, state=af.Afs.new)
     dp.register_message_handler(af.decr, state=af.Afs.name)
 

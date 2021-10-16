@@ -17,7 +17,7 @@ from loader import bot, dp
 from loguru import logger
 from utils import DialogCalendar, dialog_cal_callback
 from utils.inline_timepick import InlineTimepicker
-from utils.db_api.psql import afisha_new
+from utils.db_api.psql import afisha_new, get_afisha
 
 inline_timepicker = InlineTimepicker()
 
@@ -50,6 +50,25 @@ async def mp(message: types.Message):
         await message.answer("Выберите действие", reply_markup=inlineafad)
     else:
         await message.answer("new")
+
+
+async def afisha_view(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
+    k = get_afisha()
+    logger.info(k)
+    afish = {}
+    for d in range(len(k)):
+        j = {}
+        j['id'] = d
+        # for i in k[d]:
+        j["name"] = str(k[d][1])
+        j["decr"] = str(k[d][2])
+        j["max"] = str(k[d][3])
+        j["loc"] = str(k[d][4])
+
+        afish["dat"] = j
+    logger.info(afish)
+    await bot.send_message(chat_id=query.from_user.id, text=str(afish))
+data = {k: v for k, v in (('a', 1), ('b', 2), ('c', 3))}
 
 
 async def cb_bt(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
@@ -141,15 +160,15 @@ async def mx_user(msg: Message, state: FSMContext):
     sql = dt, str(data['location'][0])+" " + str(data['location']
                                                  [1]), data['decr'], str(data['mx_user']), data["mp_name"]
     logger.info(sql)
-    try:
-        afisha_new(dt, str(data['location'][0])+" " + str(data['location']
+    # try:
+    afisha_new(dt, str(data['location'][0])+" " + str(data['location']
                                                           [1]), data['decr'], str(data['mx_user']), data["mp_name"])
-    except:
-        print(sql)
-    try:
-        afisha_new(sql)
-    except:
-        print("переменная не сработала")
+    # except:
+    #     print(sql)
+    # try:
+    #     afisha_new(sql)
+    # except:
+    #     print("переменная не сработала")
     # await state.finish()
 
     # time=datetime.time.strptime(data['date']+data['time'],"%d-%m-%Y%H:%M")

@@ -25,7 +25,8 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(cancel, filters.Text(
         equals='cancel', ignore_case=True), state='*')
     dp.register_message_handler(cancel, state='*', commands='cancel')
-    dp.register_message_handler(start.bot_start, filters.CommandStart(),state='*')
+    dp.register_message_handler(
+        start.bot_start, filters.CommandStart(), state='*')
     # dp.register_message_handler(re.change_state, content_types=Ct.TEXT,state='*')
     dp.register_message_handler(help.bot_help, filters.CommandHelp())
     # dp.register_message_handler(afisha.inline,filters.Regexp("Афиша"))
@@ -51,7 +52,10 @@ def setup(dp: Dispatcher):
         af.cb_bt, cb_af.filter(action=['new']))
 
     dp.register_message_handler(af.name, state=af.Afs.new)
-    dp.register_message_handler(af.loc, state=af.Afs.name)
+    dp.register_message_handler(af.decr, state=af.Afs.name)
+
+    dp.register_message_handler(
+        af.loc, state=af.Afs.decr, content_types=Ct.LOCATION)
     dp.register_callback_query_handler(
         af.process_dialog_calendar, dialog_cal_callback.filter(), state=af.Afs.location)
     dp.register_message_handler(af.mx_user, state=af.Afs.date)

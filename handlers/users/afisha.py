@@ -1,6 +1,7 @@
 import datetime
 import typing
-
+import time
+from datetime import date
 from aiogram import types
 from aiogram.dispatcher import FSMContext, storage
 from aiogram.dispatcher.filters.builtin import CommandHelp
@@ -16,22 +17,28 @@ from loader import bot, dp
 from loguru import logger
 from utils import DialogCalendar, dialog_cal_callback
 from utils.inline_timepick import InlineTimepicker
+from utils.db_api.psql import afisha_new
 
 inline_timepicker = InlineTimepicker()
+
+
 class Afs(StatesGroup):
     new = State()
     name = State()
+    decr = State()
     location = State()
     pick_cal = State()
     date = State()
     users = State()
-class View(StatesGroup):
-    page=State()
-    
+
+
+applications_cb = CallbackData("applications_list", "page")
+
 
 # class afisha()
 
 cb_af = CallbackData('data', 'action')
+
 
 async def mp(message: types.Message):
     if str(message.from_user.id) in ad:
@@ -54,17 +61,26 @@ async def cb_bt(query: types.CallbackQuery, state: FSMContext, callback_data: ty
 
 
 async def name(msg: Message, state: FSMContext):
-    markup_request = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
-        KeyboardButton('Отправить локацию проведения мп', request_location=True))
+    # markup_request = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
+    # KeyboardButton('Отправить локацию проведения мп', request_location=True))
     async with state.proxy() as data:
         data['mp_name'] = msg.text
-    await msg.answer(text="Введите локацию", reply_markup=markup_request)
+    await msg.answer(text="Отправьте описание")
+    await Afs.next()
+
+
+async def decr(msg: Message, state: FSMContext):
+    # markup_request = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
+    # KeyboardButton('Отправить локацию проведения мп', request_location=True))
+    async with state.proxy() as data:
+        data['decr'] = msg.text
+    await msg.answer(text="Отправьте геолокацию")
     await Afs.next()
 
 
 async def loc(msg: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['location'] = msg.text
+        data['location'] = [msg.location.latitude, msg.location.longitude]
     await msg.answer("Выберите дату: ", reply_markup=await DialogCalendar().start_calendar())
 
     await Afs.next()
@@ -89,6 +105,7 @@ async def process_dialog_calendar(callback_query: CallbackQuery, state: FSMConte
 
             await Afs.next()
 
+
 async def cb_handler(query: types.CallbackQuery, callback_data: dict[str, str], state: FSMContext):
     await query.answer()
     handle_result = inline_timepicker.handle(query.from_user.id, callback_data)
@@ -98,7 +115,7 @@ async def cb_handler(query: types.CallbackQuery, callback_data: dict[str, str], 
                                     chat_id=query.from_user.id,
                                     message_id=query.message.message_id)
         await bot.send_message(query._values['from'].id, text="Введите макс кол-во юзеров:")
-    
+
         async with state.proxy() as data:
             data['time'] = str(handle_result.hour)+':' + \
                 f'{handle_result.minute:02}'
@@ -106,10 +123,32 @@ async def cb_handler(query: types.CallbackQuery, callback_data: dict[str, str], 
     else:
         await bot.edit_message_reply_markup(chat_id=query.from_user.id, message_id=query.message.message_id, reply_markup=inline_timepicker.get_keyboard())
 
+
 async def mx_user(msg: Message, state: FSMContext):
     async with state.proxy() as data:
         data['mx_user'] = msg.text
-    txt = "Мероприятие: "+data['mp_name']+"\n"+"В локации "+data['location']+"\n" + \
-        data['date']+" числа в "+data['time'] + \
-        "\nМакс игроков:"+data['mx_user']+"\nCоздано"
+        # print(datetime.now())
+        # time.mktime(timetuple())
+        dt = datetime.datetime.strptime(
+            (data['date'])+" "+data['time'], "%d-%m-%Y %H:%M")
+        # dates = datetime.datetime.strptime((data['date']), "%d-%m-%Y%")
+        # times = datetime.time.strptime((data['time']), "H:%M")
+
+    txt = "Мероприятие: "+data['mp_name']+"\n"+"Расположенной на карте " + \
+        "\n"+"\nМакс игроков:"+data['mx_user']+"\nCоздано"
+    await msg.answer_location(data['location'][0], data['location'][1])
     await msg.answer(text=txt)
+    sql = dt, str(data['location'][0])+" " + str(data['location']
+                                                 [1]), data['decr'], str(data['mx_user']), data["mp_name"]
+    logger.info(sql)
+    try:
+        afisha_new(dt, str(data['location'][0])+" " + str(data['location']
+                                                          [1]), data['decr'], str(data['mx_user']), data["mp_name"])
+    except:
+        print(sql)
+    try:
+        afisha_new(sql)
+    except:
+        print("переменная не сработала")
+
+    # time=datetime.time.strptime(data['date']+data['time'],"%d-%m-%Y%H:%M")

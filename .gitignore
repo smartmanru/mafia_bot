@@ -134,3 +134,4 @@ dmypy.json
 .vscode/launch.json
 old_mod/-- mafiabot."user" definition.sql
 .gitignore
+old_mod/'INSERT INTO users.sql

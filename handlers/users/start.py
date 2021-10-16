@@ -32,4 +32,3 @@ async def bot_start(m: types.Message, state: FSMContext):
         c_il = channel.invite_link
         # logger.info(channel)
         await m.answer(f"{m.from_user.full_name}, у тебя нету подписки на канал "+c_t+" Чтобы подписаться перейди по ссылке "+c_il+"\n \nКак подпишешься - жми снова /start")
-        # await state.set_state("not_subs")

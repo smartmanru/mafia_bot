@@ -150,5 +150,6 @@ async def mx_user(msg: Message, state: FSMContext):
         afisha_new(sql)
     except:
         print("переменная не сработала")
+    # await state.finish()
 
     # time=datetime.time.strptime(data['date']+data['time'],"%d-%m-%Y%H:%M")

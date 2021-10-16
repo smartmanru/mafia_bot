@@ -120,7 +120,7 @@ def afisha_new(dates: datetime, location: str, decription: str, count: str, name
     cursor = conn.cursor()
     cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO mafiabot.afisha (date, location, decription,name) VALUES(%s, %s, %s, %s, %s)', (dates, location, decription, count, name))
+        'INSERT INTO mafiabot.afisha (date, location, decription,max_count,name) VALUES(%s, %s, %s, %s, %s)', (dates, location, decription, count, name))
     conn.commit()
     cursor.close()
     conn.close()

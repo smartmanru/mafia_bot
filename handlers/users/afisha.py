@@ -51,6 +51,10 @@ def get_afish():
     return afish
 
 
+class main_men(StatesGroup):
+    main = State()
+
+
 class Afs(StatesGroup):
     new = State()
     name = State()
@@ -85,6 +89,7 @@ async def mp(message: types.Message):
         reply_markup=key,
         disable_web_page_preview=True,
     )
+    await main_men.main.set()
 
 
 async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]):

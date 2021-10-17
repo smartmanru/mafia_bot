@@ -115,12 +115,12 @@ def db_user(tg_id: int):
     return row
 
 
-def afisha_new(dates: datetime, location: str, decription: str, count: str, name: str):
+def afisha_new(dates: datetime, location: str, decription: str, count: str, name: str, photoid: str):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO mafiabot.afisha (date, location, decription,max_count,name) VALUES(%s, %s, %s, %s, %s)', (dates, location, decription, count, name))
+        'INSERT INTO mafiabot.afisha (date, location, decription,max_count,name,photoid) VALUES(%s, %s, %s, %s, %s, %s)', (dates, location, decription, count, name, photoid))
     conn.commit()
     cursor.close()
     conn.close()
@@ -132,5 +132,5 @@ def afisha_new(dates: datetime, location: str, decription: str, count: str, name
 
 def get_afisha():
     b = select_psql(
-        'select  id, name, decription, max_count, location from mafiabot.afisha where "date" > now() order by  "date" asc')
+        'select  id, name, decription, max_count, location, date,photoid from mafiabot.afisha where "date" > now() order by  "date" asc')
     return(b)

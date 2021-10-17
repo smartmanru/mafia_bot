@@ -1,6 +1,6 @@
 from aiogram import Dispatcher, filters
 from aiogram import types as t
-from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher.filters import Text, state
 from aiogram.types import ContentTypes as Ct
 from utils import dialog_cal_callback
 
@@ -47,9 +47,13 @@ def setup(dp: Dispatcher):
     dp.register_callback_query_handler(
         exec_cb, cb_us.filter(action=["ok", "edit", "cancel"]), state=U.allright
     )
-    dp.register_message_handler(af.cb_bt, filters.Text(equals="Создать"))
+    dp.register_message_handler(
+        af.cb_bt, filters.Text(equals="Создать"), state=af.main_men.main
+    )
 
-    dp.register_message_handler(af.afisha_view, filters.Text(equals="Посмотреть"))
+    dp.register_message_handler(
+        af.afisha_view, filters.Text(equals="Посмотреть"), state=af.main_men.main
+    )
     dp.register_message_handler(af.name, state=af.Afs.new)
     dp.register_message_handler(af.decr, state=af.Afs.name)
 

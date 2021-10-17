@@ -126,7 +126,8 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
     await query.message.edit_caption(caption=text, reply_markup=keyboard_markup)
 
 
-async def afisha_view(msg: Message):
+async def afisha_view(msg: Message, state: FSMContext):
+    await state.finish()
     plagination_keyboard_list = []
     afish = get_afish()
     # logger.info(callback_data)
@@ -196,9 +197,11 @@ async def zapis_cb(
 
 
 async def cb_bt(message: Message, state: FSMContext):
+
     if not str(message.from_user.id) in ad:
         await message.answer("Вы не Админ")
     else:
+        await state.finish()
         await Afs.new.set()
         await message.answer(text="Для отмены операции в любой момент наберите /cancel")
         await message.answer(text="Введите название мероприятия")

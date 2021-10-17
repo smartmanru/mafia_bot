@@ -73,5 +73,7 @@ def setup(dp: Dispatcher):
     # dp.register_callback_query_handler(af.afisha_view, af.applications_cb.filter())
     dp.register_callback_query_handler(af.pages, af.applications_cb.filter())
     dp.register_callback_query_handler(af.zapis_cb, af.zapis.filter())
-
+    dp.callback_query_handler(af.send_loc,af.locat.filter())
+    
+    dp.callback_query_handler(af.btm,af.bac.filter())
     # dp.register_message_handler(af.date, state=af.Afs.users)

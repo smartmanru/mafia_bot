@@ -1,4 +1,5 @@
 import datetime
+import logging
 import typing
 import time
 from datetime import date
@@ -25,7 +26,7 @@ from loader import bot, dp
 from loguru import logger
 from utils import DialogCalendar, dialog_cal_callback
 from utils.inline_timepick import InlineTimepicker
-from utils.db_api.psql import afisha_new, get_afisha
+from utils.db_api.psql import afisha_new, get_afisha,get_count
 
 inline_timepicker = InlineTimepicker()
 
@@ -45,7 +46,7 @@ def get_afish():
         j["loc"] = k[d][4]
         j["date"] = k[d][5]
         j["photo"] = k[d][6]
-
+        j['idushie']=get_count(k[d][0])
         afish.append(j)
     pages_number = len(k)
     return afish
@@ -75,7 +76,8 @@ zapis = CallbackData("id", "action")
 # class afisha()
 
 cb_af = CallbackData("data", "action")
-
+bac=CallbackData("data","action")
+locat = CallbackData("data","lat","log")
 
 async def mp(message: types.Message):
     keys = []
@@ -118,14 +120,36 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
             "➡️", callback_data=applications_cb.new(page + 1)
         )
         plagination_keyboard_list.append(next_page_btn)
+    b=afish[page]['loc']
+    logger.info(type(b))
+    location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new("loc",b))
+    cancel_key=types.InlineKeyboardButton("Назад",callback_data=bac.new("back"))
+    
 
     keyboard_markup.row(*plagination_keyboard_list)
-    text = afish[page]["name"] + "\n" + afish[page]["decr"]
+    keyboard_markup.row(location_key,cancel_key)
+    text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n"+str(afish[page]["idushie"][0][0])+"/"+str(afish[page]["max"])
     ph = types.InputMediaPhoto(media=afish[page]["photo"])
     await query.message.edit_media(ph)
     await query.message.edit_caption(caption=text, reply_markup=keyboard_markup)
 
-
+async def send_loc(
+    query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
+):
+    b=query.data.split()
+    
+    long=b[0]
+    lat=b[1]
+    await query.message.answer_location(longitude=long,latitude=lat)
+    
+async def btm(
+    query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
+):
+    key = await keyboard([["Правила"], ["Афиша", "Рейтинг"], ["Настройки"]])
+    await query.message.answer(
+    "Добро пожаловать в Бота Maffia by [@Zelova](https://t.me/MafiaZelova)", parse_mode="Markdown",
+    reply_markup=key, disable_web_page_preview=True)
+    
 async def afisha_view(msg: Message, state: FSMContext):
     await state.finish()
     plagination_keyboard_list = []
@@ -174,8 +198,13 @@ async def afisha_view(msg: Message, state: FSMContext):
         )
         plagination_keyboard_list.append(next_page_btn)
 
+    location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new("loc"))
+    cancel_key=types.InlineKeyboardButton("Назад",callback_data=locat.new("back"))
+    
+
     keyboard_markup.row(*plagination_keyboard_list)
-    text = afish[page]["name"] + "\n" + afish[page]["decr"]
+    keyboard_markup.row(location_key,cancel_key)
+    text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n"+str(afish[page]["idushie"][0][0])+"/"+str(afish[page]["max"])
     # for t in afish:
     await msg.answer_photo(
         photo=afish[page]["photo"],
@@ -355,3 +384,4 @@ async def pick_photo(msg: Message, state: FSMContext):
     await state.finish()
 
     # time=datetime.time.strptime(data['date']+data['time'],"%d-%m-%Y%H:%M")
+

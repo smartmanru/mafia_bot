@@ -134,3 +134,7 @@ def get_afisha():
     b = select_psql(
         'select  id, name, decription, max_count, location, date,photoid from mafiabot.afisha where "date" > now() order by  "date" asc')
     return(b)
+
+def get_count(id):
+    c=select_psql('select count(*) from mafiabot.idushie where "id_afisha" ='+str(id)+';')
+    return(c)

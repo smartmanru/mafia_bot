@@ -26,7 +26,7 @@ from loader import bot, dp
 from loguru import logger
 from utils import DialogCalendar, dialog_cal_callback
 from utils.inline_timepick import InlineTimepicker
-from utils.db_api.psql import afisha_new, get_afisha,get_count
+from utils.db_api.psql import afisha_new, get_afisha,get_count,insert_id,checkid
 
 inline_timepicker = InlineTimepicker()
 
@@ -77,7 +77,7 @@ zapis = CallbackData("id", "action")
 
 cb_af = CallbackData("data", "action")
 bac=CallbackData("data","action")
-locat = CallbackData("data","lat","log")
+locat = CallbackData("data","lat")
 
 async def mp(message: types.Message):
     keys = []
@@ -108,10 +108,10 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
             "⬅️", callback_data=applications_cb.new(page - 1)
         )
         plagination_keyboard_list.append(previous_page_btn)
-
+    a=afish[page]['id_af']
     pages_number_btn = types.InlineKeyboardButton(
         "Записаться",
-        callback_data=zapis.new(page),
+        callback_data=zapis.new(a),
     )
     plagination_keyboard_list.append(pages_number_btn)
 
@@ -122,7 +122,7 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
         plagination_keyboard_list.append(next_page_btn)
     b=afish[page]['loc']
     logger.info(type(b))
-    location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new("loc",b))
+    location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new(b))
     cancel_key=types.InlineKeyboardButton("Назад",callback_data=bac.new("back"))
     
 
@@ -134,12 +134,12 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
     await query.message.edit_caption(caption=text, reply_markup=keyboard_markup)
 
 async def send_loc(
-    query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
+    query: CallbackQuery, state: FSMContext 
 ):
-    b=query.data.split()
-    
-    long=b[0]
-    lat=b[1]
+    b=query.data.split(":")
+    l=b[1].split() 
+    long=l[1]
+    lat=l[0]
     await query.message.answer_location(longitude=long,latitude=lat)
     
 async def btm(
@@ -188,7 +188,7 @@ async def afisha_view(msg: Message, state: FSMContext):
 
     pages_number_btn = types.InlineKeyboardButton(
         "Записаться",
-        callback_data=zapis.new(page),
+        callback_data=zapis.new(get_afish[page]['id_af']),
     )
     plagination_keyboard_list.append(pages_number_btn)
 
@@ -200,7 +200,6 @@ async def afisha_view(msg: Message, state: FSMContext):
 
     location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new("loc"))
     cancel_key=types.InlineKeyboardButton("Назад",callback_data=locat.new("back"))
-    
 
     keyboard_markup.row(*plagination_keyboard_list)
     keyboard_markup.row(location_key,cancel_key)
@@ -223,7 +222,12 @@ async def zapis_cb(
     query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
 ):
     logger.info(query)
+    l=query.data.split(":")
+    k=l[1]
+    checkid(query.from_user.id,int(k))
 
+    insert_id(query.from_user.id,int(k))
+    query.message.answer("Вы записаны на мероприятие. Для оплаты перейдите по ссылке - ссылка")
 
 async def cb_bt(message: Message, state: FSMContext):
 

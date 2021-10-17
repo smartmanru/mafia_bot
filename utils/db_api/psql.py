@@ -138,3 +138,21 @@ def get_afisha():
 def get_count(id):
     c=select_psql('select count(*) from mafiabot.idushie where "id_afisha" ='+str(id)+';')
     return(c)
+def checkid(id:int,page:int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor = conn.cursor()
+    cursor.execute(
+        'select * from mafiabot.idushie where "id_users"=%s and "id_afisha"=%s)', (id,page))
+    conn.commit()
+    cursor.close()
+    conn.close()  
+def insert_id(id:int, page:int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO mafiabot.idushie (id_users, id_afisha) VALUES(%s, %s)', (id,page))
+    conn.commit()
+    cursor.close()
+    conn.close() 

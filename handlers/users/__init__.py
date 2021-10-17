@@ -12,7 +12,7 @@ from . import registration as re
 from . import start
 
 # from aiogram.utils.callback_data import CallbackData
-from .afisha import cb_af, inline_timepicker
+# from .afisha import cb_af, inline_timepicker
 from .registration import User as U
 from .registration import cancel_handler as cancel
 from .registration import cb_us, exec_cb
@@ -23,6 +23,9 @@ from .registration import settings as reg
 
 def setup(dp: Dispatcher):
 
+    dp.register_callback_query_handler(af.send_loc, af.locat.filter())
+    
+    dp.register_callback_query_handler(af.btm,af.bac.filter())
     dp.register_message_handler(
         cancel, filters.Text(equals="cancel", ignore_case=True), state="*"
     )
@@ -67,13 +70,10 @@ def setup(dp: Dispatcher):
     )
     dp.callback_query_handler(af.process_dialog_calendar, dialog_cal_callback.filter())
     dp.register_callback_query_handler(
-        af.cb_handler, inline_timepicker.filter(), state=af.Afs.pick_cal
+        af.cb_handler, af.inline_timepicker.filter(), state=af.Afs.pick_cal
     )
 
     # dp.register_callback_query_handler(af.afisha_view, af.applications_cb.filter())
     dp.register_callback_query_handler(af.pages, af.applications_cb.filter())
     dp.register_callback_query_handler(af.zapis_cb, af.zapis.filter())
-    dp.callback_query_handler(af.send_loc,af.locat.filter())
-    
-    dp.callback_query_handler(af.btm,af.bac.filter())
     # dp.register_message_handler(af.date, state=af.Afs.users)

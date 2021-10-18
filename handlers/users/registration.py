@@ -160,12 +160,18 @@ async def ph_num_wrong(msg: types.Message, state: FSMContext):
 
 async def ph_num(msg: types.Contact, state: FSMContext):
     logger.info(await state.get_state())
+    b = await bot.get_user_profile_photos(user_id=msg.from_user.id)
+
     if msg.content_type == "contact":
         ph_num = msg.contact.phone_number
     else:
         ph_num = msg.text
     async with state.proxy() as data:
         data["ph_num"] = ph_num
+        if b.photos[0]:
+            data["photo"]=b.photos[0][2]['file_id']
+        else:
+            data['photo']="non_photo"
 
     inline_btn_1 = InlineKeyboardButton(
         "⬆️Вернутся назад⬆️", callback_data=cb_us.new(action="edit")
@@ -178,7 +184,8 @@ async def ph_num(msg: types.Contact, state: FSMContext):
     # "❌Отменить❌", callback_data=cb_us.new(action='cancel')
     # )
     inline_kb1 = InlineKeyboardMarkup().add(inline_btn_1, inline_btn_2)
-
+    if not data["photo"]=="non_photo":
+        await bot.send_photo(photo=data["photo"],chat_id=msg.from_user.id)
     await msg.answer(
         "Проверьте ваши данные: \nФИ: "
         + data["fio"]
@@ -261,6 +268,7 @@ async def exec_cb(
             k.get("proof"),
             k.get("dohod"),
             k.get("ph_num"),
+            k.get("photo")
         )
 
     logger.info(await state.get_state())

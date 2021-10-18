@@ -55,7 +55,6 @@ from data.config import DATABASE_URL
 #     "phone_number" text,
 
 def select_sq3(select):
-
     b = []
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
@@ -67,7 +66,7 @@ def select_sq3(select):
     cursor.close()
     conn.close()
 
-    return(b)
+    return (b)
 
 
 def select_psql(select):
@@ -81,24 +80,23 @@ def select_psql(select):
     return row
 
 
-def db_reg(tg_id: int, fio: str, city: str, age: int, mf_nn: str, proof: str, dohod: str, ph_num: int):
+def db_reg(tg_id: int, fio: str, city: str, age: int, mf_nn: str, proof: str, dohod: str, ph_num: int,photoid:str):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor = conn.cursor()
     cursor.execute(
-        'UPDATE mafiabot.user set fi_reg=%s, city=%s, age=%s, nickname_mafia=%s, proffesion=%s, dohod=%s, phone_number=%s WHERE telegram_id=%s', (fio, city, age, mf_nn, proof, dohod, ph_num, tg_id))
+        'UPDATE mafiabot.user set fi_reg=%s, city=%s, age=%s, nickname_mafia=%s, proffesion=%s, dohod=%s, phone_number=%s, photo_id=%s WHERE telegram_id=%s',
+        (fio, city, age, mf_nn, proof, dohod, ph_num, photoid, tg_id,))
     conn.commit()
     cursor.close()
     conn.close()
 
 
-def db_first(tg_id: int, tg_nick: str, tg_fio: str,):
-
+def db_first(tg_id: int, tg_nick: str, tg_fio: str, ):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO mafiabot.user (telegram_id, telegram_nickname, fi_tg) VALUES(%s, %s, %s)', (tg_id, tg_nick, tg_fio))
+        'INSERT INTO mafiabot.user (telegram_id, telegram_nickname, fi_tg) VALUES(%s, %s, %s)',
+        (tg_id, tg_nick, tg_fio))
     conn.commit()
     cursor.close()
     conn.close()
@@ -118,12 +116,13 @@ def db_user(tg_id: int):
 def afisha_new(dates: datetime, location: str, decription: str, count: str, name: str, photoid: str):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO mafiabot.afisha (date, location, decription,max_count,name,photoid) VALUES(%s, %s, %s, %s, %s, %s)', (dates, location, decription, count, name, photoid))
+        'INSERT INTO mafiabot.afisha (date, location, decription,max_count,name,photoid) VALUES(%s, %s, %s, %s, %s, %s)',
+        (dates, location, decription, count, name, photoid))
     conn.commit()
     cursor.close()
     conn.close()
+
 
 # def afisha_update
 # def afisha select
@@ -133,26 +132,40 @@ def afisha_new(dates: datetime, location: str, decription: str, count: str, name
 def get_afisha():
     b = select_psql(
         'select  id, name, decription, max_count, location, date,photoid from mafiabot.afisha where "date" > now() order by  "date" asc')
-    return(b)
+    return (b)
+
 
 def get_count(id):
-    c=select_psql('select count(*) from mafiabot.idushie where "id_afisha" ='+str(id)+';')
-    return(c)
-def checkid(id:int,page:int):
+    c = select_psql('select count(*) from mafiabot.idushie where "id_afisha" =' + str(id) + ';')
+    return (c)
+
+
+def checkid(id: int, page: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor = conn.cursor()
     cursor.execute(
-        'select * from mafiabot.idushie where "id_users"=%s and "id_afisha"=%s)', (id,page))
+        'select * from mafiabot.idushie where ("id_users"=%s and "id_afisha"=%s)', (id, page))
     conn.commit()
     cursor.close()
-    conn.close()  
-def insert_id(id:int, page:int):
+    conn.close()
+
+
+def insert_id(id: int, page: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO mafiabot.idushie (id_users, id_afisha) VALUES(%s, %s)', (id,page))
+        'INSERT INTO mafiabot.idushie (id_users, id_afisha) VALUES(%s, %s)', (int(id), int(page)))
     conn.commit()
     cursor.close()
-    conn.close() 
+    conn.close()
+
+
+def select_data(id: int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor.execute(
+        'select * from user where telegram_id = (%s)', (id,))
+    row = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return row

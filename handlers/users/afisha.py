@@ -1,32 +1,22 @@
 import datetime
-import logging
 import typing
-import time
-from datetime import date
+
 from aiogram import types
-from aiogram.dispatcher import FSMContext, storage
-from aiogram.dispatcher.filters.builtin import CommandHelp
+from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import (
     CallbackQuery,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButton,
     Message,
-    ReplyKeyboardMarkup,
-    ReplyKeyboardRemove,
-    reply_keyboard,
 )
-from keyboards.default.main_keyboard import keyboard
-
 from aiogram.utils.callback_data import CallbackData
-from data.config import ADMINS as ad
-from handlers import users
-from loader import bot, dp
 from loguru import logger
-from utils import DialogCalendar, dialog_cal_callback
+
+from data.config import ADMINS as ad
+from keyboards.default.main_keyboard import keyboard
+from loader import bot
+from utils import DialogCalendar
+from utils.db_api.psql import afisha_new, get_afisha, get_count, insert_id, checkid
 from utils.inline_timepick import InlineTimepicker
-from utils.db_api.psql import afisha_new, get_afisha,get_count,insert_id,checkid
 
 inline_timepicker = InlineTimepicker()
 
@@ -186,9 +176,10 @@ async def afisha_view(msg: Message, state: FSMContext):
         )
         plagination_keyboard_list.append(previous_page_btn)
 
+    a=afish[page]['id_af']
     pages_number_btn = types.InlineKeyboardButton(
         "Записаться",
-        callback_data=zapis.new(get_afish[page]['id_af']),
+        callback_data=zapis.new(a),
     )
     plagination_keyboard_list.append(pages_number_btn)
 
@@ -221,13 +212,15 @@ async def afisha_view(msg: Message, state: FSMContext):
 async def zapis_cb(
     query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
 ):
+
     logger.info(query)
     l=query.data.split(":")
     k=l[1]
-    checkid(query.from_user.id,int(k))
-
+    m=checkid(query.from_user.id,int(k))
+    # await query.message.answer(text=m)
     insert_id(query.from_user.id,int(k))
-    query.message.answer("Вы записаны на мероприятие. Для оплаты перейдите по ссылке - ссылка")
+    await query.message.answer(text="Вы записаны на мероприятие. Для оплаты перейдите по ссылке - ссылка")
+
 
 async def cb_bt(message: Message, state: FSMContext):
 

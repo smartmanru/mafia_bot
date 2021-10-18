@@ -257,6 +257,8 @@ async def decr(msg: Message, state: FSMContext):
 async def loc(msg: Message, state: FSMContext):
     async with state.proxy() as data:
         data["location"] = [msg.location.latitude, msg.location.longitude]
+        data["location_address"] = msg.venue.address
+        data["location_title"]=msg.venue.title
     await msg.answer(
         "Выберите дату: ", reply_markup=await DialogCalendar().start_calendar()
     )
@@ -337,7 +339,7 @@ async def mx_user(msg: Message, state: FSMContext):
 async def pick_photo(msg: Message, state: FSMContext):
 
     async with state.proxy() as data:
-        b=len(msg.photo)
+        b=len(msg.photo)-1
         data["photo_id"] = msg.photo[b].file_id
         dt = datetime.datetime.strptime(
             (data["date"]) + " " + data["time"], "%d-%m-%Y %H:%M"
@@ -348,7 +350,7 @@ async def pick_photo(msg: Message, state: FSMContext):
             + data["mp_name"]
             + "\n"
             + "Расположенной на карте "
-            + "\n"
+            + data["decr"]+"\n"
             + "\nМакс игроков:"
             + data["mx_user"]
             + "\nCоздано"

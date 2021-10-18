@@ -255,7 +255,7 @@ async def exec_cb(
                 l.append(data[k])
             logger.info(l)
             k = {}
-            for q in range(7):
+            for q in range(8):
                 k[b[q]] = l[q]
             logger.info(k)
             # await msg.answer(k, reply_markup=ReplyKeyboardRemove())

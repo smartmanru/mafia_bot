@@ -67,7 +67,7 @@ zapis = CallbackData("id", "action")
 
 cb_af = CallbackData("data", "action")
 bac=CallbackData("data","action")
-locat = CallbackData("data","lat")
+locat = CallbackData("log","lat")
 
 async def mp(message: types.Message):
     keys = []

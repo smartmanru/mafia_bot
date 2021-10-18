@@ -337,7 +337,8 @@ async def mx_user(msg: Message, state: FSMContext):
 async def pick_photo(msg: Message, state: FSMContext):
 
     async with state.proxy() as data:
-        data["photo_id"] = msg.photo[3].file_id
+        b=len(msg.photo)
+        data["photo_id"] = msg.photo[b].file_id
         dt = datetime.datetime.strptime(
             (data["date"]) + " " + data["time"], "%d-%m-%Y %H:%M"
         )

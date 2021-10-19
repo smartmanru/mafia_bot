@@ -188,7 +188,7 @@ async def zapis_cb(
     query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
 ):
     u=db_check_reg(query.from_user.id)
-    if u[0][0]=="none":
+    if not  u[0][0]:
         await query.message.answer("Введите свои данные в настройках /settings")
         return
     else:

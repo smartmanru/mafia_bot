@@ -15,10 +15,12 @@ from data.config import ADMINS as ad
 from keyboards.default.main_keyboard import keyboard
 from loader import bot
 from utils import DialogCalendar
-from utils.db_api.psql import afisha_new, get_afisha, get_count, insert_id, checkid
+from utils.db_api.psql import afisha_new, get_afisha, get_count, insert_id, checkid, db_check_reg
 from utils.inline_timepick import InlineTimepicker
 
 inline_timepicker = InlineTimepicker()
+async def info_photo(msg:Message):
+    logger.info(msg.photo[len(msg.photo)-1].file_id)
 
 
 def get_afish():
@@ -66,7 +68,7 @@ zapis = CallbackData("id", "action")
 # class afisha()
 
 cb_af = CallbackData("data", "action")
-bac=CallbackData("data","action")
+bac=CallbackData("back","true")
 locat = CallbackData("log","lat")
 
 async def mp(message: types.Message):
@@ -98,7 +100,7 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
             "⬅️", callback_data=applications_cb.new(page - 1)
         )
         plagination_keyboard_list.append(previous_page_btn)
-    a=afish[page]['id_af']
+    a=afish[page-1]['id_af']
     pages_number_btn = types.InlineKeyboardButton(
         "Записаться",
         callback_data=zapis.new(a),
@@ -110,7 +112,7 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
             "➡️", callback_data=applications_cb.new(page + 1)
         )
         plagination_keyboard_list.append(next_page_btn)
-    b=afish[page]['loc']
+    b=afish[page-1]['loc']
     logger.info(type(b))
     location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new(b))
     cancel_key=types.InlineKeyboardButton("Назад",callback_data=bac.new("back"))
@@ -118,11 +120,46 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
 
     keyboard_markup.row(*plagination_keyboard_list)
     keyboard_markup.row(location_key,cancel_key)
-    text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n"+str(afish[page]["idushie"][0][0])+"/"+str(afish[page]["max"])
+    text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n"+str(afish[page]["date"])+"\nЗаписано "+str(afish[page]["idushie"][0][0])+" из "+str(afish[page]["max"])
     ph = types.InputMediaPhoto(media=afish[page]["photo"])
     await query.message.edit_media(ph)
     await query.message.edit_caption(caption=text, reply_markup=keyboard_markup)
 
+async def afisha_view(msg: Message, state: FSMContext):
+    await state.finish()
+    plagination_keyboard_list = []
+    afish = get_afish()
+    keyboard_markup = types.InlineKeyboardMarkup()
+    page = 0
+    allaf = len(afish)
+    pages_number = len(afish)-1
+    if page > 0:
+        previous_page_btn = types.InlineKeyboardButton(
+            "⬅️", callback_data=applications_cb.new(page - 1)
+        )
+        plagination_keyboard_list.append(previous_page_btn)
+    a=afish[page]['id_af']
+    pages_number_btn = types.InlineKeyboardButton(
+        "Записаться",
+        callback_data=zapis.new(a),
+    )
+    plagination_keyboard_list.append(pages_number_btn)
+
+    if page < pages_number:
+        next_page_btn = types.InlineKeyboardButton(
+            "➡️", callback_data=applications_cb.new(page + 1)
+        )
+        plagination_keyboard_list.append(next_page_btn)
+    location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new("loc"))
+    cancel_key=types.InlineKeyboardButton("Назад",callback_data=bac.new("back"))
+    keyboard_markup.row(*plagination_keyboard_list)
+    keyboard_markup.row(location_key,cancel_key)
+    text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n"+str(afish[page]["date"])+"\nЗаписано "+str(afish[page]["idushie"][0][0])+" из "+str(afish[page]["max"])
+    await msg.answer_photo(
+        photo=afish[page]["photo"],
+        caption=text,
+        reply_markup=keyboard_markup,
+    )
 async def send_loc(
     query: CallbackQuery, state: FSMContext 
 ):
@@ -140,68 +177,6 @@ async def btm(
     "Добро пожаловать в Бота Maffia by [@Zelova](https://t.me/MafiaZelova)", parse_mode="Markdown",
     reply_markup=key, disable_web_page_preview=True)
     
-async def afisha_view(msg: Message, state: FSMContext):
-    await state.finish()
-    plagination_keyboard_list = []
-    afish = get_afish()
-    # logger.info(callback_data)
-    # logger.info(state)
-    # logger.info(query)
-    keyboard_markup = types.InlineKeyboardMarkup()
-    # logger.info(k)
-
-    # logger.info(afish)
-
-    # await bot.send_message(chat_id=query.from_user.id, text=str(afish))
-    page = 0
-    allaf = len(afish)
-
-    # keyboard_markup = types.InlineKeyboardMarkup(row_width=3)
-    # # for page in range(1, pages_number + 1):
-    # page_btn = types.InlineKeyboardButton(
-    #     page, callback_data=applications_cb.new(page))
-    # keyboard_markup.insert(page_btn)
-
-    # back_btn = types.InlineKeyboardButton(
-    #     "Назад", callback_data=applications_cb.new(1))
-    # keyboard_markup.add(back_btn)
-
-    # # await query.message.edit_text("📖 Пожалуйста, выберите страницу", reply_markup=keyboard_markup)
-    # await query.answer()
-    pages_number = len(afish)
-
-    if page > 0:
-        previous_page_btn = types.InlineKeyboardButton(
-            "⬅️", callback_data=applications_cb.new(page - 1)
-        )
-        plagination_keyboard_list.append(previous_page_btn)
-
-    a=afish[page]['id_af']
-    pages_number_btn = types.InlineKeyboardButton(
-        "Записаться",
-        callback_data=zapis.new(a),
-    )
-    plagination_keyboard_list.append(pages_number_btn)
-
-    if page < pages_number:
-        next_page_btn = types.InlineKeyboardButton(
-            "➡️", callback_data=applications_cb.new(page + 1)
-        )
-        plagination_keyboard_list.append(next_page_btn)
-
-    location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new("loc"))
-    cancel_key=types.InlineKeyboardButton("Назад",callback_data=locat.new("back"))
-
-    keyboard_markup.row(*plagination_keyboard_list)
-    keyboard_markup.row(location_key,cancel_key)
-    text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n"+str(afish[page]["idushie"][0][0])+"/"+str(afish[page]["max"])
-    # for t in afish:
-    await msg.answer_photo(
-        photo=afish[page]["photo"],
-        caption=text,
-        reply_markup=keyboard_markup,
-    )
-
     """
 
 Регистрация        
@@ -212,14 +187,24 @@ async def afisha_view(msg: Message, state: FSMContext):
 async def zapis_cb(
     query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
 ):
-
-    logger.info(query)
-    l=query.data.split(":")
-    k=l[1]
-    m=checkid(query.from_user.id,int(k))
+    u=db_check_reg(query.from_user.id)
+    if u[0][0]=="none":
+        await query.message.answer("Введите свои данные в настройках /settings")
+        return
+    else:
     # await query.message.answer(text=m)
-    insert_id(query.from_user.id,int(k))
-    await query.message.answer(text="Вы записаны на мероприятие. Для оплаты перейдите по ссылке - ссылка")
+    #logger.info(query)
+        l=query.data.split(":")
+        k=l[1]
+        m=checkid(query.from_user.id,int(k))
+        logger.info(m)
+        if  not m ==[]:
+            await query.message.answer("Вы уже записаны на данное мероприятие")
+        else:
+            insert_id(query.from_user.id,int(k))
+            await query.message.answer(text="Вы записаны на мероприятие. Для оплаты перейдите по ссылке - ссылка")
+   # await query.message.answer(text="Не удалось")
+    # finally:
 
 
 async def cb_bt(message: Message, state: FSMContext):

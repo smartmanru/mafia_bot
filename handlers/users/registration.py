@@ -234,8 +234,8 @@ async def exec_cb(
         async with state.proxy() as data:
             data = []
             await User.first()
-            # await bot.delete_message(chat_id=query.message.chat.id,
-            #  message_id=query.message.message_id)
+            await bot.delete_message(chat_id=query.message.chat.id,
+             message_id=query.message.message_id)
             await bot.edit_message_text(
                 chat_id=query.message.chat.id,
                 message_id=query.message.message_id,
@@ -270,6 +270,9 @@ async def exec_cb(
             k.get("ph_num"),
             k.get("photo")
         )
+        await bot.delete_message(chat_id=query.message.chat.id,
+        message_id=query.message.message_id)
+        await bot.send_message(chat_id=query.message.chat.id,text="настройки сохранены. Нажмите /start")
 
     logger.info(await state.get_state())
 

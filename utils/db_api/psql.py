@@ -111,7 +111,15 @@ def db_user(tg_id: int):
     cursor.close()
     conn.close()
     return row
-
+def db_check_reg(tg_id: int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor.execute(
+        "select nickname_mafia from mafiabot.user where mafiabot.user.telegram_id = %s;", (tg_id,))
+    row = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return row
 
 def afisha_new(dates: datetime, location: str, decription: str, count: str, name: str, photoid: str):
     conn = psycopg2.connect(DATABASE_URL)
@@ -145,9 +153,10 @@ def checkid(id: int, page: int):
     cursor = conn.cursor()
     cursor.execute(
         'select * from mafiabot.idushie where ("id_users"=%s and "id_afisha"=%s)', (id, page))
-    conn.commit()
+    row = cursor.fetchall()
     cursor.close()
     conn.close()
+    return row
 
 
 def insert_id(id: int, page: int):

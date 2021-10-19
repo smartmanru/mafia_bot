@@ -68,6 +68,9 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(
         af.pick_photo, state=af.Afs.users, content_types=Ct.PHOTO
     )
+    dp.register_message_handler(
+        af.info_photo, content_types=Ct.PHOTO
+    )
     dp.callback_query_handler(af.process_dialog_calendar, dialog_cal_callback.filter())
     dp.register_callback_query_handler(
         af.cb_handler, af.inline_timepicker.filter(), state=af.Afs.pick_cal

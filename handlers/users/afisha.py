@@ -17,7 +17,7 @@ from loader import bot
 from utils import DialogCalendar
 from utils.db_api.psql import afisha_new, get_afisha, get_count, insert_id, checkid, db_check_reg
 from utils.inline_timepick import InlineTimepicker
-
+from utils.utils_kb import create_button as cr_bt, create_keyboard as cr_kb,create_inline_callback_button as cr_incb, create_inline_keyboard as cr_in_kb
 inline_timepicker = InlineTimepicker()
 async def info_photo(msg:Message):
     logger.info(msg.photo[len(msg.photo)-1].file_id)
@@ -42,12 +42,8 @@ def get_afish():
         afish.append(j)
     pages_number = len(k)
     return afish
-
-
 class main_men(StatesGroup):
     main = State()
-
-
 class Afs(StatesGroup):
     new = State()
     name = State()
@@ -63,14 +59,14 @@ applications_cb = CallbackData("applications_list", "page")
 applications_manager_page_navigation_cb = CallbackData(
     "application_page_nav", "pages_number"
 )
-
 zapis = CallbackData("id", "action")
 # class afisha()
-
 cb_af = CallbackData("data", "action")
 bac=CallbackData("back","true")
 locat = CallbackData("log","lat")
+cou=CallbackData("page","count")
 
+#startafisha
 async def mp(message: types.Message):
     keys = []
     if str(message.from_user.id) in ad:
@@ -86,6 +82,7 @@ async def mp(message: types.Message):
     await main_men.main.set()
 
 
+#навигация по карточкаа
 async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]):
     logger.info(query.data)
     plagination_keyboard_list = []
@@ -97,10 +94,11 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
 
     if page > 0:
         previous_page_btn = types.InlineKeyboardButton(
-            "⬅️", callback_data=applications_cb.new(page - 1)
+          "⬅️", callback_data=applications_cb.new(page - 1)
+
         )
         plagination_keyboard_list.append(previous_page_btn)
-    a=afish[page-1]['id_af']
+    a=afish[page]['id_af']
     pages_number_btn = types.InlineKeyboardButton(
         "Записаться",
         callback_data=zapis.new(a),
@@ -109,22 +107,30 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
 
     if index_page < pages_number:
         next_page_btn = types.InlineKeyboardButton(
-            "➡️", callback_data=applications_cb.new(page + 1)
+           "➡️", callback_data=applications_cb.new(page + 1)
         )
         plagination_keyboard_list.append(next_page_btn)
-    b=afish[page-1]['loc']
+    b=afish[page]['loc']
     logger.info(type(b))
+    count=1
+    vagons_key=types.InlineKeyboardButton("+"+str(count),callback_data=cou.new(count))
     location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new(b))
     cancel_key=types.InlineKeyboardButton("Назад",callback_data=bac.new("back"))
     
 
     keyboard_markup.row(*plagination_keyboard_list)
-    keyboard_markup.row(location_key,cancel_key)
+    keyboard_markup.row(location_key,vagons_key,cancel_key)
     text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n"+str(afish[page]["date"])+"\nЗаписано "+str(afish[page]["idushie"][0][0])+" из "+str(afish[page]["max"])
     ph = types.InputMediaPhoto(media=afish[page]["photo"])
     await query.message.edit_media(ph)
     await query.message.edit_caption(caption=text, reply_markup=keyboard_markup)
-
+async def coun(query: types.CallbackQuery, callback_data: typing.Dict[any, any]):
+    count=query.data
+    b=query.data.split(":")
+    l=b[1].split() 
+    j=int(l[0])
+    j+=j
+    return j
 async def afisha_view(msg: Message, state: FSMContext):
     await state.finish()
     plagination_keyboard_list = []
@@ -150,10 +156,12 @@ async def afisha_view(msg: Message, state: FSMContext):
             "➡️", callback_data=applications_cb.new(page + 1)
         )
         plagination_keyboard_list.append(next_page_btn)
+    count=1
+    vagons_key=types.InlineKeyboardButton("+"+str(count),callback_data=cou.new(count))
     location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new("loc"))
     cancel_key=types.InlineKeyboardButton("Назад",callback_data=bac.new("back"))
     keyboard_markup.row(*plagination_keyboard_list)
-    keyboard_markup.row(location_key,cancel_key)
+    keyboard_markup.row(location_key,vagons_key,cancel_key)
     text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n"+str(afish[page]["date"])+"\nЗаписано "+str(afish[page]["idushie"][0][0])+" из "+str(afish[page]["max"])
     await msg.answer_photo(
         photo=afish[page]["photo"],
@@ -187,9 +195,11 @@ async def btm(
 async def zapis_cb(
     query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
 ):
+    logger.info(query)
     u=db_check_reg(query.from_user.id)
-    if not  u:
+    if u[0][0] is  None:
         await query.message.answer("Введите свои данные в настройках /settings")
+        bot.answer_callback_query(query.id)
         return
     else:
     # await query.message.answer(text=m)
@@ -202,7 +212,10 @@ async def zapis_cb(
             await query.message.answer("Вы уже записаны на данное мероприятие")
         else:
             insert_id(query.from_user.id,int(k))
-            await query.message.answer(text="Вы записаны на мероприятие. Для оплаты перейдите по ссылке - ссылка")
+            a=types.InlineKeyboardButton(text="Оплатить",url='tg://user?id=1616662464')
+            b=types.InlineKeyboardMarkup(row_width=1)
+            b.add(a)
+            await query.message.answer(reply_markup=b, text="Вы записаны на мероприятие. Для оплаты нажмите на кнопку и ")
    # await query.message.answer(text="Не удалось")
     # finally:
 

@@ -79,5 +79,5 @@ def setup(dp: Dispatcher):
     # dp.register_callback_query_handler(af.afisha_view, af.applications_cb.filter())
     dp.register_callback_query_handler(af.pages, af.applications_cb.filter())
     dp.register_callback_query_handler(af.zapis_cb, af.zapis.filter())
-    dp.register_callback_query_handler(af.coun,af.cou.filter())
+    dp.register_callback_query_handler(af.coun,af.cou.filter(),state=af.Vagon.init)
         # dp.register_message_handler(af.date, state=af.Afs.users)

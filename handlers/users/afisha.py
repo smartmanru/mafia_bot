@@ -9,6 +9,7 @@ from aiogram.types import (
     Message,
 )
 from aiogram.utils.callback_data import CallbackData
+
 from loguru import logger
 
 from data.config import ADMINS as ad
@@ -53,6 +54,9 @@ class Afs(StatesGroup):
     date = State()
     users = State()
     pick_photo = State()
+class Vagon(StatesGroup):
+    init = State()
+    number = State()
 
 
 applications_cb = CallbackData("applications_list", "page")
@@ -79,11 +83,13 @@ async def mp(message: types.Message):
         reply_markup=key,
         disable_web_page_preview=True,
     )
-    await main_men.main.set()
+    # await main_men.main.set()
 
 
 #навигация по карточкаа
-async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]):
+async def pages(query: types.CallbackQuery,state: FSMContext, callback_data: typing.Dict[any, any]):
+    await Vagon.new.set()
+ 
     logger.info(query.data)
     plagination_keyboard_list = []
     keyboard_markup = types.InlineKeyboardMarkup()
@@ -112,8 +118,8 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
         plagination_keyboard_list.append(next_page_btn)
     b=afish[page]['loc']
     logger.info(type(b))
-    count=1
-    vagons_key=types.InlineKeyboardButton("+"+str(count),callback_data=cou.new(count))
+    count=0
+    vagons_key=types.InlineKeyboardButton("Приду не один",callback_data=cou.new(count))
     location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new(b))
     cancel_key=types.InlineKeyboardButton("Назад",callback_data=bac.new("back"))
     
@@ -124,13 +130,18 @@ async def pages(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
     ph = types.InputMediaPhoto(media=afish[page]["photo"])
     await query.message.edit_media(ph)
     await query.message.edit_caption(caption=text, reply_markup=keyboard_markup)
-async def coun(query: types.CallbackQuery, callback_data: typing.Dict[any, any]):
-    count=query.data
-    b=query.data.split(":")
-    l=b[1].split() 
-    j=int(l[0])
-    j+=j
-    return j
+async def coun(query: types.CallbackQuery,state: FSMContext, callback_data: typing.Dict[any, any]):
+    b=0
+    async with state.proxy() as data:
+        data["count"] =int(callback_data["count"])
+        b=data["count"]
+    
+    if b<5:
+        b+=1
+        await bot.answer_callback_query(query.id)
+        return b
+    else:
+        b=0
 async def afisha_view(msg: Message, state: FSMContext):
     await state.finish()
     plagination_keyboard_list = []
@@ -157,7 +168,7 @@ async def afisha_view(msg: Message, state: FSMContext):
         )
         plagination_keyboard_list.append(next_page_btn)
     count=1
-    vagons_key=types.InlineKeyboardButton("+"+str(count),callback_data=cou.new(count))
+    vagons_key=types.InlineKeyboardButton("Приду не один",callback_data=cou.new(count))
     location_key=types.InlineKeyboardButton("Локация",callback_data=locat.new("loc"))
     cancel_key=types.InlineKeyboardButton("Назад",callback_data=bac.new("back"))
     keyboard_markup.row(*plagination_keyboard_list)
@@ -168,6 +179,7 @@ async def afisha_view(msg: Message, state: FSMContext):
         caption=text,
         reply_markup=keyboard_markup,
     )
+ 
 async def send_loc(
     query: CallbackQuery, state: FSMContext 
 ):
@@ -185,6 +197,11 @@ async def btm(
     "Добро пожаловать в Бота Maffia by [@Zelova](https://t.me/MafiaZelova)", parse_mode="Markdown",
     reply_markup=key, disable_web_page_preview=True)
     
+    
+    
+async def coun(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
+    query.message.answer(text="Введите число гостей, которые будут с вами от 2 до 5, ввод только цифрами")
+    
     """
 
 Регистрация        
@@ -199,11 +216,9 @@ async def zapis_cb(
     u=db_check_reg(query.from_user.id)
     if u[0][0] is  None:
         await query.message.answer("Введите свои данные в настройках /settings")
-        bot.answer_callback_query(query.id)
+        await bot.answer_callback_query(query.id)
         return
     else:
-    # await query.message.answer(text=m)
-    #logger.info(query)
         l=query.data.split(":")
         k=l[1]
         m=checkid(query.from_user.id,int(k))
@@ -216,8 +231,6 @@ async def zapis_cb(
             b=types.InlineKeyboardMarkup(row_width=1)
             b.add(a)
             await query.message.answer(reply_markup=b, text="Вы записаны на мероприятие. Для оплаты нажмите на кнопку и ")
-   # await query.message.answer(text="Не удалось")
-    # finally:
 
 
 async def cb_bt(message: Message, state: FSMContext):
@@ -235,8 +248,6 @@ async def cb_bt(message: Message, state: FSMContext):
 
 
 async def name(msg: Message, state: FSMContext):
-    # markup_request = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
-    # KeyboardButton('Отправить локацию проведения мп', request_location=True))
     async with state.proxy() as data:
         data["mp_name"] = msg.text
     await msg.answer(text="Отправьте описание")
@@ -244,8 +255,6 @@ async def name(msg: Message, state: FSMContext):
 
 
 async def decr(msg: Message, state: FSMContext):
-    # markup_request = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
-    # KeyboardButton('Отправить локацию проведения мп', request_location=True))
     async with state.proxy() as data:
         data["decr"] = msg.text
     await msg.answer(text="Отправьте геолокацию")

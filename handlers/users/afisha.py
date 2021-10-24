@@ -273,7 +273,7 @@ async def btm(
 ):
     key = await keyboard([["Правила"], ["Афиша", "Рейтинг"], ["Настройки"]])
     await query.message.answer(
-        "Добро пожаловать в Бота Maffia by [@Zelova](https://t.me/MafiaZelova)", parse_mode="Markdown",
+        "Добро пожаловать в Бота Mafia by [@Zelova](https://t.me/MafiaZelova)", parse_mode="Markdown",
         reply_markup=key, disable_web_page_preview=True)
 
 
@@ -314,9 +314,12 @@ async def zapis_cb(
                 text="Оплатить", url='tg://user?id=1616662464')
             b = types.InlineKeyboardMarkup(row_width=1)
             id = get_afisha_id(int(k))
+            nameMp = id[0][0]
+            date = str(id[0][1])
             b.add(a)
-            text = "Пользователь @"+u[0][1]+"\n создал заявку на оплату."+str(
-                id)+"\n Его данные:\nФИ-"+u[0][1]+"\nИгровой ник: "+u[0][2]+'\nПрофессия:'+u[0][3]+'\nДоход от '+u[0][4]+"\nНомер телефона:"+u[0][5]+'\nВозраст:'+str(u[0][6])+'У него +'+s
+            text = "Пользователь @"+u[0][0]+"\n создал заявку на оплату."+nameMp + " на дату "+date+"\n Его данные:\nФИО-"+u[0][1]+"\n"+u[0][2]+"\nВозраст: "+str(
+                u[0][3])+"\nПрофессия:"+u[0][4]+"\nДоход от "+u[0][5]+"\nНомер телефона: "+u[0][6]+"\nИгровой ник:"+u[0][7]+"\nОн с собой привел +"+s
+            
             suc = types.InlineKeyboardButton(text="Одобрить", callback_data=req_pay.new(
                 query.from_user.id, int(k)))
             # key.append(suc)

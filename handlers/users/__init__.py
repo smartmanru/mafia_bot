@@ -38,6 +38,9 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(reg, filters.CommandSettings(), state="*")
     dp.register_message_handler(reg, filters.Text(
         equals="Настройки", ignore_case=True))
+
+    dp.register_message_handler(
+        re.gender, state=U.gender, content_types=Ct.TEXT)
     dp.register_message_handler(re.fio, state=U.fio, content_types=Ct.TEXT)
     dp.register_message_handler(re.city, state=U.city, content_types=Ct.TEXT)
     dp.register_message_handler(re.age, state=U.age, content_types=Ct.TEXT)

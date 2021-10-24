@@ -26,6 +26,7 @@ from utils.utils_kb import create_button as cr_bt, create_keyboard as cr_kb
 
 class User(StatesGroup):
     page = State()
+    gender = State()
     fio = State()
     city = State()
     age = State()
@@ -55,7 +56,7 @@ async def cancel_handler(msg: Message, state: FSMContext):
     settings = cr_bt("Настройки")
     key = cr_kb(rules, afisha, reit, settings)
     await msg.answer(
-        "Добро пожаловать в Бота Maffia by [@Zelova](https://t.me/MafiaZelova)",
+        "Добро пожаловать в Бота Mafia by [@Zelova](https://t.me/MafiaZelova)",
         parse_mode="Markdown",
         reply_markup=key,
         disable_web_page_preview=True,
@@ -69,8 +70,10 @@ async def reg_cb(query: types.CallbackQuery, callback: Message, state: FSMContex
         query.message.chat.id,
         text="Для отмены операции в любой момент наберите /cancel",
     )
-
-    await bot.send_message(query.message.chat.id, "Введите Фамилию Имя")
+    man = cr_bt("Мужчина")
+    woomen = cr_bt("Женщина")
+    word = cr_kb(man, woomen)
+    await bot.send_message("Выберите пол", reply_markup=word)
     await User.page.set()
     await User.next()
 
@@ -79,8 +82,18 @@ async def settings(msg: Message, state: FSMContext):
     dml(msg)
     await msg.answer(text="Для отмены операции в любой момент наберите /cancel")
     logger.info(await state.get_state())
-    await msg.answer("Введите Фамилию Имя")
+    man = cr_bt("Мужчина")
+    woomen = cr_bt("Женщина")
+    word = cr_kb(man, woomen)
+    await msg.answer("Выберите пол", reply_markup=word)
     await User.page.set()
+    await User.next()
+
+
+async def gender(msg: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data["gender"] = msg.text
+    await msg.answer("Введите Фамилию Имя")
     await User.next()
 
 
@@ -91,7 +104,6 @@ async def fio(msg: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data["fio"] = msg.text
     await msg.answer("Введите Город")
-
     await User.next()
 
 
@@ -108,7 +120,7 @@ async def age(msg: types.Message, state: FSMContext):
     try:
         int(msg.text)
         dml(msg)
-        await msg.answer("Введите Ник для мафии")
+        await msg.answer("Игровой ник")
         await User.next()
         async with state.proxy() as data:
             data["age"] = msg.text
@@ -169,9 +181,9 @@ async def ph_num(msg: types.Contact, state: FSMContext):
     async with state.proxy() as data:
         data["ph_num"] = ph_num
         if b.photos[0]:
-            data["photo"]=b.photos[0][2]['file_id']
+            data["photo"] = b.photos[0][2]['file_id']
         else:
-            data['photo']="non_photo"
+            data['photo'] = "non_photo"
 
     inline_btn_1 = InlineKeyboardButton(
         "⬆️Вернутся назад⬆️", callback_data=cb_us.new(action="edit")
@@ -184,10 +196,10 @@ async def ph_num(msg: types.Contact, state: FSMContext):
     # "❌Отменить❌", callback_data=cb_us.new(action='cancel')
     # )
     inline_kb1 = InlineKeyboardMarkup().add(inline_btn_1, inline_btn_2)
-    if not data["photo"]=="non_photo":
-        await bot.send_photo(photo=data["photo"],chat_id=msg.from_user.id)
+    if not data["photo"] == "non_photo":
+        await bot.send_photo(photo=data["photo"], chat_id=msg.from_user.id)
     await msg.answer(
-        "Проверьте ваши данные: \nФИ: "
+        "Проверьте ваши данные: \nВы - "+data["gender"]+"\nФИO: "
         + data["fio"]
         + "\nГород: "
         + data["city"]
@@ -213,7 +225,7 @@ async def ph_num(msg: types.Contact, state: FSMContext):
         b.append(k)
         l.append(data[k])
     k = {}
-    for q in range(7):
+    for q in range(8):
         k[b[q]] = l[q]
     # logger.info(l)
     # logger.info(k)
@@ -235,7 +247,7 @@ async def exec_cb(
             data = []
             await User.first()
             await bot.delete_message(chat_id=query.message.chat.id,
-             message_id=query.message.message_id)
+                                     message_id=query.message.message_id)
             await bot.edit_message_text(
                 chat_id=query.message.chat.id,
                 message_id=query.message.message_id,
@@ -268,13 +280,14 @@ async def exec_cb(
             k.get("proof"),
             k.get("dohod"),
             k.get("ph_num"),
+            k.get("gender"),
             k.get("photo")
+
         )
-        await bot.delete_message(chat_id=query.message.chat.id,
-        message_id=query.message.message_id)
-        await bot.send_message(chat_id=query.message.chat.id,text="настройки сохранены. Нажмите /start")
+        await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+        await bot.send_message(chat_id=query.message.chat.id, text="настройки сохранены. Нажмите /start")
+        await state.finish()
 
     logger.info(await state.get_state())
 
-    await state.finish()
     logger.info(await state.get_state())

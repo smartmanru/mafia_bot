@@ -80,12 +80,12 @@ def select_psql(select):
     return row
 
 
-def db_reg(tg_id: int, fio: str, city: str, age: int, mf_nn: str, proof: str, dohod: str, ph_num: int, photoid: str):
+def db_reg(tg_id: int, fio: str, city: str, age: int, mf_nn: str, proof: str, dohod: str, ph_num: int, gender: str, photoid: str):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
-        'UPDATE mafiabot.user set fi_reg=%s, city=%s, age=%s, nickname_mafia=%s, proffesion=%s, dohod=%s, phone_number=%s, photo_id=%s WHERE telegram_id=%s',
-        (fio, city, age, mf_nn, proof, dohod, ph_num, photoid, tg_id,))
+        'UPDATE mafiabot.user set fi_reg=%s, city=%s, age=%s, nickname_mafia=%s, proffesion=%s, dohod=%s, phone_number=%s, photo_id=%s, gender=%s WHERE telegram_id=%s',
+        (fio, city, age, mf_nn, proof, dohod, ph_num, photoid, gender, tg_id,))
     conn.commit()
     cursor.close()
     conn.close()
@@ -117,7 +117,7 @@ def db_check_reg(tg_id: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
-        "select telegram_nickname,fi_reg,nickname_mafia,proffesion,dohod,phone_number,age from mafiabot.user where mafiabot.user.telegram_id = %s;", (tg_id,))
+        "select telegram_nickname,fi_reg,gender,age,proffesion,dohod,phone_number,nickname_mafia from mafiabot.user where mafiabot.user.telegram_id = %s;", (tg_id,))
     row = cursor.fetchall()
     cursor.close()
     conn.close()

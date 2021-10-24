@@ -24,7 +24,7 @@ async def bot_start(m: types.Message, state: FSMContext):
         await m.answer(f"Привет, {m.from_user.full_name}!")
         key = await keyboard([["Правила"], ["Афиша", "Рейтинг"], ["Настройки"]])
         await m.answer(
-            "Добро пожаловать в Бота Maffia by [@Zelova](https://t.me/MafiaZelova)", parse_mode="Markdown",
+            "Добро пожаловать в Бота Mafia by [@Zelova](https://t.me/MafiaZelova)", parse_mode="Markdown",
             reply_markup=key, disable_web_page_preview=True)
     else:
         channel = await bot.get_chat(config.CHANNEL_ID)

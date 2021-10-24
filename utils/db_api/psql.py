@@ -115,7 +115,7 @@ def db_check_reg(tg_id: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
-        "select nickname_mafia from mafiabot.user where mafiabot.user.telegram_id = %s;", (tg_id,))
+        "select nickname_mafia,telegram_nickname,fi_reg,nickname_mafia,proffesion,dohod,phone_number,age from mafiabot.user where mafiabot.user.telegram_id = %s;", (tg_id,))
     row = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -141,7 +141,10 @@ def get_afisha():
     b = select_psql(
         'select  id, name, decription, max_count, location, date,photoid from mafiabot.afisha where "date" > now() order by  "date" asc')
     return (b)
-
+def get_afisha_id(id:int):
+    b = select_psql(
+        'select  name, date from mafiabot.afisha where id='+str(id)+";")
+    return (b) 
 
 def get_count(id):
     c = select_psql('select count(*) from mafiabot.idushie where "id_afisha" =' + str(id) + ';')
@@ -159,11 +162,11 @@ def checkid(id: int, page: int):
     return row
 
 
-def insert_id(id: int, page: int):
+def insert_id(id: int, page: int,vagons:int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO mafiabot.idushie (id_users, id_afisha) VALUES(%s, %s)', (int(id), int(page)))
+        'INSERT INTO mafiabot.idushie (id_users, id_afisha,vagons,reserv) VALUES(%s, %s,%s,TRUE)', (int(id), int(page),int(vagons)))
     conn.commit()
     cursor.close()
     conn.close()
@@ -178,3 +181,17 @@ def select_data(id: int):
     cursor.close()
     conn.close()
     return row
+def all_msg(msg,state,callback):
+    if not msg:
+        msg="NULL" 
+    if not state:
+        state="NULL"
+    if not callback:
+        callback="NULL"
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO mafiabot.logs (message, callback,state) VALUES(%s, %s,%s)', (str(msg),str(callback),str(state)))
+    conn.commit()
+    cursor.close()
+    conn.close() 

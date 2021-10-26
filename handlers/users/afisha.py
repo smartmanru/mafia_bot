@@ -295,7 +295,7 @@ async def zapis_cb(
     u = db_check_reg(query.from_user.id)
     keyboard_markup = types.InlineKeyboardMarkup()
 
-    if u[0][0] is None:
+    if u[0][7] is None:
         await query.message.answer("Введите свои данные в настройках /settings")
         await bot.answer_callback_query(query.id)
         return
@@ -319,7 +319,7 @@ async def zapis_cb(
             b.add(a)
             text = "Пользователь @"+u[0][0]+"\n создал заявку на оплату."+nameMp + " на дату "+date+"\n Его данные:\nФИО-"+u[0][1]+"\n"+u[0][2]+"\nВозраст: "+str(
                 u[0][3])+"\nПрофессия:"+u[0][4]+"\nДоход от "+u[0][5]+"\nНомер телефона: "+u[0][6]+"\nИгровой ник:"+u[0][7]+"\nОн с собой привел +"+s
-            
+
             suc = types.InlineKeyboardButton(text="Одобрить", callback_data=req_pay.new(
                 query.from_user.id, int(k)))
             # key.append(suc)

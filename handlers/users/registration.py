@@ -173,65 +173,67 @@ async def ph_num_wrong(msg: types.Message, state: FSMContext):
 async def ph_num(msg: types.Contact, state: FSMContext):
     logger.info(await state.get_state())
     b = await bot.get_user_profile_photos(user_id=msg.from_user.id)
-
-    if msg.content_type == "contact":
-        ph_num = msg.contact.phone_number
+    if len(b.values.get("photos")) == 0:
+        await bot.send_message(chat_id=msg.from_user.id, text="Поставьте аватарку")
     else:
-        ph_num = msg.text
-    async with state.proxy() as data:
-        data["ph_num"] = ph_num
-        if b.photos[0]:
-            data["photo"] = b.photos[0][2]['file_id']
+        if msg.content_type == "contact":
+            ph_num = msg.contact.phone_number
         else:
-            data['photo'] = "non_photo"
+            ph_num = msg.text
+        async with state.proxy() as data:
+            data["ph_num"] = ph_num
+            if b.photos[0]:
+                data["photo"] = b.photos[0][2]['file_id']
+            else:
+                data['photo'] = "non_photo"
 
-    inline_btn_1 = InlineKeyboardButton(
-        "⬆️Вернутся назад⬆️", callback_data=cb_us.new(action="edit")
-    )
-    inline_btn_2 = InlineKeyboardButton(
-        "🆗Отправить🆗", callback_data=cb_us.new(action="ok")
-    )
-    # inline_btn_3 = InlineKeyboardButton(
+        inline_btn_1 = InlineKeyboardButton(
+            "⬆️Вернутся назад⬆️", callback_data=cb_us.new(action="edit")
+        )
+        inline_btn_2 = InlineKeyboardButton(
+            "🆗Отправить🆗", callback_data=cb_us.new(action="ok")
+        )
+        # inline_btn_3 = InlineKeyboardButton(
 
-    # "❌Отменить❌", callback_data=cb_us.new(action='cancel')
-    # )
-    inline_kb1 = InlineKeyboardMarkup().add(inline_btn_1, inline_btn_2)
-    if not data["photo"] == "non_photo":
-        await bot.send_photo(photo=data["photo"], chat_id=msg.from_user.id)
-    await msg.answer(
-        "Проверьте ваши данные: \nВы - "+data["gender"]+"\nФИO: "
-        + data["fio"]
-        + "\nГород: "
-        + data["city"]
-        + "\nВозраст: "
-        + data["age"]
-        + "\nНикнейм для мафии: "
-        + data["mf_nn"]
-        + "\nПрофессия: "
-        + data["proof"]
-        + "\nДоход От "
-        + data["dohod"]
-        + "\nНомер телефона: "
-        + data["ph_num"]
-        + "\n\nВаш профиль телеграмма и ваше фото будет использоваться в списке участников оплатившую данную игру.\n \nВсе верно?",
-        reply_markup=inline_kb1,
-    )
-    await User.next()
-    logger.info(await state.get_state())
+        # "❌Отменить❌", callback_data=cb_us.new(action='cancel')
+        # )
+        inline_kb1 = InlineKeyboardMarkup().add(inline_btn_1, inline_btn_2)
+        if not data["photo"] == "non_photo":
+            await bot.send_photo(photo=data["photo"], chat_id=msg.from_user.id)
+        await msg.answer(
+            "Проверьте ваши данные: \nВы - "+data["gender"]+"\nФИO: "
+            + data["fio"]
+            + "\nГород: "
+            + data["city"]
+            + "\nВозраст: "
+            + data["age"]
+            + "\nНикнейм для мафии: "
+            + data["mf_nn"]
+            + "\nПрофессия: "
+            + data["proof"]
+            + "\nДоход От "
+            + data["dohod"]
+            + "\nНомер телефона: "
+            + data["ph_num"]
+            + "\n\nВаш профиль телеграмма и ваше фото будет использоваться в списке участников оплатившую данную игру.\n \nВсе верно?",
+            reply_markup=inline_kb1,
+        )
+        await User.next()
+        logger.info(await state.get_state())
 
-    b = []
-    l = []
-    for k in data:
-        b.append(k)
-        l.append(data[k])
-    k = {}
-    for q in range(8):
-        k[b[q]] = l[q]
-    # logger.info(l)
-    # logger.info(k)
-    # await msg.answer(k, reply_markup=ReplyKeyboardRemove())
-    # db_reg(msg.from_user.id, k.get("fio"), k.get("city"), k.get("age"), k.get(
-    #     "mf_nn"), k.get("proof"), k.get("dohod"), k.get("ph_num"))
+        b = []
+        l = []
+        for k in data:
+            b.append(k)
+            l.append(data[k])
+        k = {}
+        for q in range(8):
+            k[b[q]] = l[q]
+        # logger.info(l)
+        # logger.info(k)
+        # await msg.answer(k, reply_markup=ReplyKeyboardRemove())
+        # db_reg(msg.from_user.id, k.get("fio"), k.get("city"), k.get("age"), k.get(
+        #     "mf_nn"), k.get("proof"), k.get("dohod"), k.get("ph_num"))
 
 
 async def exec_cb(

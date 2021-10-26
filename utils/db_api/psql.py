@@ -154,7 +154,7 @@ def get_afisha_id(id: int):
 
 def get_count(id):
     c = select_psql(
-        'select count(*) from mafiabot.idushie where "id_afisha" =' + str(id) + ';')
+        'select count(*) from mafiabot.idushie where "id_afisha" =' + str(id) + ' and "payed"=True;')
     return (c)
 
 

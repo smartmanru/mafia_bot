@@ -183,7 +183,17 @@ def update_id(id: int, page: int, pae=bool):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
-        'Update  mafiabot.idushie set payed=True where  where ("id_users"= % s and "id_afisha"= % s)', (int(id), int(page)))
+        'Update  mafiabot.idushie set payed=True where  ("id_users"= %s and "id_afisha"= %s)', (int(id), int(page)))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def del_mp_db(id: int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor.execute(
+        'Update  mafiabot.idushie set payed=True where  ("id_users"= %s and "id_afisha"= %s)', (int(id)))
     conn.commit()
     cursor.close()
     conn.close()

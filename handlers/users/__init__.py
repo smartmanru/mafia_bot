@@ -91,3 +91,4 @@ def setup(dp: Dispatcher):
     dp.register_callback_query_handler(af.couni, af.cou.filter())
     # dp.register_message_handler(af.date, state=af.Afs.users)
     dp.register_callback_query_handler(af.confirm, af.req_pay.filter())
+    dp.register_callback_query_handler(af.del_mp, af.delcb.filter())

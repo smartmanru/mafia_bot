@@ -79,6 +79,7 @@ bac = CallbackData("back", "true")
 locat = CallbackData("log", "lat")
 cou = CallbackData("page", "count")
 req_pay = CallbackData("act", "id", "afish")
+delcb = CallbackData("del", "id")
 # startafisha
 
 
@@ -168,9 +169,21 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
     text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n" + \
         str(afish[page]["date"])+"\nЗаписано "+str(afish[page]
                                                    ["idushie"][0][0])+" из "+str(afish[page]["max"])
+    if str(query.message.chat.id) in ad:
+        del_key = types.InlineKeyboardButton(
+            "Удалить", callback_data=delcb.new(afish[page]["id_af"]))
+        keyboard_markup.row(del_key)
+
     ph = types.InputMediaPhoto(media=afish[page]["photo"])
+
     await query.message.edit_media(ph)
+
     await query.message.edit_caption(caption=text, reply_markup=keyboard_markup)
+
+
+async def del_mp(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
+    id = callback_data["id"]
+    del_mp_db()
 
 
 async def couni(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
@@ -195,7 +208,7 @@ async def afisha_view(msg: Message, state: FSMContext):
     vagons = 0
     index_page = page + 1
     allaf = len(afish)
-    pages_number = len(afish)-1
+    pages_number = len(afish)
     if page > 0:
         previous_page_btn = types.InlineKeyboardButton(
             "⬅️", callback_data=applications_cb.new(page + 1, vagons)
@@ -327,16 +340,18 @@ async def zapis_cb(
                 text='Отменить', callback_data=req_pay.new("gavno", "her"))
             # key.append(cancel)
             keyboard_markup.row(suc)
-            await bot.send_message(chat_id=881691, text=text, reply_markup=suc)
+            await bot.send_message(chat_id=881691, text=text, reply_markup=keyboard_markup)
             await query.message.answer(reply_markup=b, text="Вы записаны на мероприятие. Для оплаты нажмите на кнопку и запросите оплату")
 
 
 async def confirm(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
                   ):
-    l = query.data.split(":")
+    l = list(query.data.split(":"))
     k = l[1]
     s = l[2]
-    update_id(int(k), int(l))
+    logger.info(k+s)
+    update_id(int(k), int(s))
+    await bot.send_message(chat_id=k, text="Оплата прошла и подтверждена нажмите /start для продолжения")
 
 
 async def cb_bt(message: Message, state: FSMContext):

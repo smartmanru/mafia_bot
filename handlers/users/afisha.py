@@ -7,13 +7,14 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 from aiogram.types.reply_keyboard import KeyboardButton
 from aiogram.utils.callback_data import CallbackData
+from aiogram.utils.markdown import text
 from data.config import ADMINS as ad
 from keyboards.default.main_keyboard import keyboard
 from loader import bot
 from loguru import logger
 from utils import DialogCalendar
 from utils.db_api.psql import (afisha_new, all_msg, checkid, db_check_reg,
-                               get_afisha, get_afisha_id, get_count, insert_id, update_id)
+                               get_afisha, get_afisha_id, get_count, insert_id, update_id, del_mp_db)
 from utils.inline_timepick import InlineTimepicker
 from utils.utils_kb import create_button as cr_bt
 from utils.utils_kb import create_inline_callback_button as cr_incb
@@ -183,7 +184,8 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
 
 async def del_mp(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
     id = callback_data["id"]
-    del_mp_db()
+    del_mp_db(int(id))
+    await query.message(text="Вы удалили событие нажмите /start для продолжение")
 
 
 async def couni(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
@@ -319,7 +321,10 @@ async def zapis_cb(
         m = checkid(query.from_user.id, int(k))
         logger.info(m)
         if not m == []:
-            await query.message.answer("Вы уже записаны на данное мероприятие")
+            if m[0][5]:
+                await query.message.answer("Вы уже записаны на данное мероприятие")
+            else:
+                await query.message.answer('Вы еще не оплатили это мероприятие')
         else:
             key = []
             insert_id(query.from_user.id, int(k), int(s),)

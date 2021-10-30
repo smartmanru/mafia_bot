@@ -193,7 +193,7 @@ def del_mp_db(id: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
-        'Update  mafiabot.idushie set payed=True where  ("id_users"= %s and "id_afisha"= %s)', (int(id)))
+        'DELETE FROM mafiabot.idushie WHERE id_afisha=(%s)', (id,))
     conn.commit()
     cursor.close()
     conn.close()

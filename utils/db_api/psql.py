@@ -144,6 +144,7 @@ def get_afisha():
     b = select_psql(
         'select  id, name, decription, max_count, location, date,photoid from mafiabot.afisha where "date" > now() order by  "date" asc')
     return (b)
+# getallvagons=
 
 
 def get_afisha_id(id: int):
@@ -154,7 +155,8 @@ def get_afisha_id(id: int):
 
 def get_count(id):
     c = select_psql(
-        'select count(*) from mafiabot.idushie where "id_afisha" =' + str(id) + ' and "payed"=True;')
+        # 'select count(*) from mafiabot.idushie where "id_afisha" =' + str(id) + ' and "payed"=True;')
+        'select sum(vagons), count(*) FROM mafiabot.idushie WHERE id_afisha = '+str(id) + ' and "payed"=True;')
     return (c)
 
 

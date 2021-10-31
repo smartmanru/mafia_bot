@@ -107,6 +107,7 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
     plagination_keyboard_list = []
     keyboard_markup = types.InlineKeyboardMarkup()
     afish = get_afish()
+
     page = int(callback_data["page"])
     vagons = int(callback_data["vagons"])
     vagons_index = vagons+1

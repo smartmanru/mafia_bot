@@ -120,11 +120,12 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
         )
         plagination_keyboard_list.append(previous_page_btn)
     a = afish[page]['id_af']
-    pages_number_btn = types.InlineKeyboardButton(
-        "Записаться",
-        callback_data=zapis.new(a, vagons),
-    )
-    plagination_keyboard_list.append(pages_number_btn)
+    if int(afish[page]["idushie"]) < int(afish[page]["max"]):
+        pages_number_btn = types.InlineKeyboardButton(
+            "Записаться",
+            callback_data=zapis.new(a, vagons),
+        )
+        plagination_keyboard_list.append(pages_number_btn)
 
     if index_page < pages_number:
         next_page_btn = types.InlineKeyboardButton(
@@ -168,18 +169,15 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
     keyboard_markup.row(*plagination_keyboard_list)
     keyboard_markup.row(*count_keyboard)
     keyboard_markup.row(location_key, cancel_key)
-    text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n" + \
+    text = str(afish[page]["id_af"])+"\n"+afish[page]["name"] + "\n" + afish[page]["decr"]+"\n" + \
         str(afish[page]["date"])+"\nЗаписано "+str(afish[page]
-                                                   ["idushie"][0][0])+" из "+str(afish[page]["max"])
+                                                   ["idushie"])+" из "+str(afish[page]["max"])
     if str(query.message.chat.id) in ad:
         del_key = types.InlineKeyboardButton(
             "Удалить", callback_data=delcb.new(afish[page]["id_af"]))
         keyboard_markup.row(del_key)
-
     ph = types.InputMediaPhoto(media=afish[page]["photo"])
-
     await query.message.edit_media(ph)
-
     await query.message.edit_caption(caption=text, reply_markup=keyboard_markup)
 
 
@@ -214,15 +212,16 @@ async def afisha_view(msg: Message, state: FSMContext):
     pages_number = len(afish)
     if page > 0:
         previous_page_btn = types.InlineKeyboardButton(
-            "⬅️", callback_data=applications_cb.new(page + 1, vagons)
+            "⬅️", callback_data=applications_cb.new(page - 1, vagons)
         )
         plagination_keyboard_list.append(previous_page_btn)
     a = afish[page]['id_af']
-    pages_number_btn = types.InlineKeyboardButton(
-        "Записаться",
-        callback_data=zapis.new(a, vagons),
-    )
-    plagination_keyboard_list.append(pages_number_btn)
+    if int(afish[page]["idushie"]) < int(afish[page]["max"]):
+        pages_number_btn = types.InlineKeyboardButton(
+            "Записаться",
+            callback_data=zapis.new(a, vagons),
+        )
+        plagination_keyboard_list.append(pages_number_btn)
 
     if index_page < pages_number:
         next_page_btn = types.InlineKeyboardButton(
@@ -231,6 +230,7 @@ async def afisha_view(msg: Message, state: FSMContext):
         plagination_keyboard_list.append(next_page_btn)
     b = afish[page]['loc']
     # logger.info(type(b))
+
     count_keyboard = []
     if 5 > vagons > 0:
         vagons_minus_key = types.InlineKeyboardButton(
@@ -257,6 +257,7 @@ async def afisha_view(msg: Message, state: FSMContext):
             vagons_plus_key = types.InlineKeyboardButton(
                 "+1", callback_data=applications_cb.new(page, vagons+1))
             count_keyboard.append(vagons_plus_key)
+
     location_key = types.InlineKeyboardButton(
         "Локация", callback_data=locat.new(b))
     cancel_key = types.InlineKeyboardButton(
@@ -264,9 +265,13 @@ async def afisha_view(msg: Message, state: FSMContext):
     keyboard_markup.row(*plagination_keyboard_list)
     keyboard_markup.row(*count_keyboard)
     keyboard_markup.row(location_key, cancel_key)
-    text = afish[page]["name"] + "\n" + afish[page]["decr"]+"\n" + \
+    text = str(afish[page]["id_af"])+"\n"+afish[page]["name"] + "\n" + afish[page]["decr"]+"\n" + \
         str(afish[page]["date"])+"\nЗаписано "+str(afish[page]
-                                                   ["idushie"][0][0])+" из "+str(afish[page]["max"])
+                                                   ["idushie"])+" из "+str(afish[page]["max"])
+    if str(msg.chat.id) in ad:
+        del_key = types.InlineKeyboardButton(
+            "Удалить", callback_data=delcb.new(afish[page]["id_af"]))
+        keyboard_markup.row(del_key)
     await msg.answer_photo(
         photo=afish[page]["photo"],
         caption=text,

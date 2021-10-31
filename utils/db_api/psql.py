@@ -157,7 +157,13 @@ def get_count(id):
     c = select_psql(
         # 'select count(*) from mafiabot.idushie where "id_afisha" =' + str(id) + ' and "payed"=True;')
         'select sum(vagons), count(*) FROM mafiabot.idushie WHERE id_afisha = '+str(id) + ' and "payed"=True;')
-    return (c)
+    if c[0][0] == None:
+        i = 0
+    else:
+        i = c[0][0]
+    k = c[0][1]
+    u = i+k
+    return (str(u))
 
 
 def checkid(id: int, page: int):

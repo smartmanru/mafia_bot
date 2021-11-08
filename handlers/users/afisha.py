@@ -525,6 +525,8 @@ async def pick_photo(msg: Message, state: FSMContext):
             data["mp_name"],
             data["photo_id"],
         )
+        await state.finish()
+
         # except:
     #     print(sql)
     # try:

@@ -68,7 +68,7 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(af.decr, state=af.Afs.name)
 
     dp.register_message_handler(
-        af.loc, state=af.Afs.decr, content_types=Ct.VENUE)
+        af.loc, state=af.Afs.decr, content_types=Ct.VENUE|Ct.LOCATION|Ct.TEXT)
     dp.register_callback_query_handler(
         af.process_dialog_calendar, dialog_cal_callback.filter(), state=af.Afs.location
     )

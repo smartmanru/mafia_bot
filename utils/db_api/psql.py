@@ -80,7 +80,7 @@ def select_psql(select):
     return row
 
 
-def db_reg(tg_id: int, fio: str, city: str, age: int, mf_nn: str, proof: str, dohod: str, ph_num: int, gender: str, photoid: str):
+def db_reg_upd(tg_id: int, fio: str, city: str, age: int, mf_nn: str, proof: str, dohod: str, ph_num: int, gender: str, photoid: str):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -91,7 +91,7 @@ def db_reg(tg_id: int, fio: str, city: str, age: int, mf_nn: str, proof: str, do
     conn.close()
 
 
-def db_first(tg_id: int, tg_nick: str, tg_fio: str, ):
+def db_reg_new(tg_id: int, tg_nick: str, tg_fio: str, ):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -102,7 +102,7 @@ def db_first(tg_id: int, tg_nick: str, tg_fio: str, ):
     conn.close()
 
 
-def db_user(tg_id: int):
+def db_reg_sel_user(tg_id: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -113,7 +113,7 @@ def db_user(tg_id: int):
     return row
 
 
-def db_check_reg(tg_id: int):
+def db_reg_sel_all_user(tg_id: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -123,8 +123,18 @@ def db_check_reg(tg_id: int):
     conn.close()
     return row
 
+def db_user_sel_all(id: int):
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+    cursor.execute(
+        'select * from user where telegram_id = (%s)', (id,))
+    row = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return row
 
-def afisha_new(dates: datetime, location: str, decription: str, count: str, name: str, photoid: str):
+
+def db_af_new(dates: datetime, location: str, decription: str, count: str, name: str, photoid: str):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -140,20 +150,20 @@ def afisha_new(dates: datetime, location: str, decription: str, count: str, name
 # def subscribe
 
 
-def get_afisha():
+def db_af_sel():
     b = select_psql(
         'select  id, name, decription, max_count, location, date,photoid from mafiabot.afisha where "date" > now() order by  "date" asc')
     return (b)
 # getallvagons=
 
 
-def get_afisha_id(id: int):
+def db_af_sel_id(id: int):
     b = select_psql(
         'select  name, date from mafiabot.afisha where id='+str(id)+";")
     return (b)
 
 
-def get_count(id):
+def db_idu_sel_count(id):
     c = select_psql(
         # 'select count(*) from mafiabot.idushie where "id_afisha" =' + str(id) + ' and "payed"=True;')
         'select sum(vagons), count(*) FROM mafiabot.idushie WHERE id_afisha = '+str(id) + ' and "payed"=True;')
@@ -166,7 +176,7 @@ def get_count(id):
     return (str(u))
 
 
-def checkid(id: int, page: int):
+def db_idu_chk_reg(id: int, page: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -177,7 +187,7 @@ def checkid(id: int, page: int):
     return row
 
 
-def insert_id(id: int, page: int, vagons: int):
+def db_idu_new_zap(id: int, page: int, vagons: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -187,7 +197,7 @@ def insert_id(id: int, page: int, vagons: int):
     conn.close()
 
 
-def update_id(id: int, page: int, pae=bool):
+def db_idu_upd_pay(id: int, page: int, pae=bool):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -197,7 +207,7 @@ def update_id(id: int, page: int, pae=bool):
     conn.close()
 
 
-def del_mp_db(id: int):
+def db_idu_del(id: int):
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
@@ -207,18 +217,9 @@ def del_mp_db(id: int):
     conn.close()
 
 
-def select_data(id: int):
-    conn = psycopg2.connect(DATABASE_URL)
-    cursor = conn.cursor()
-    cursor.execute(
-        'select * from user where telegram_id = (%s)', (id,))
-    row = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return row
 
 
-def all_msg(msg, state, callback):
+def db_log_upd(msg, state, callback):
     if not msg:
         msg = "NULL"
     if not state:

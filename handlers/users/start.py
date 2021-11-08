@@ -7,7 +7,7 @@ from aiogram.utils import markdown as md
 from keyboards.default.main_keyboard import keyboard
 from aiogram.dispatcher import FSMContext
 # from .registration import User
-from utils.db_api.psql import db_first, select_psql, db_user
+from utils.db_api.psql import db_reg_new, select_psql, db_reg_sel_user
 
 
 async def bot_start(m: types.Message, state: FSMContext):
@@ -16,8 +16,8 @@ async def bot_start(m: types.Message, state: FSMContext):
     # sec_name = m.from_user.second_name
     username = str(m.from_user.username)
     photo = await m.from_user.get_profile_photos()
-    if not db_user(ids):
-        db_first(ids, username, fs_name)
+    if not db_reg_sel_user(ids):
+        db_reg_new(ids, username, fs_name)
     user_channel_status = await bot.get_chat_member(chat_id=config.CHANNEL_ID, user_id=m.from_user.id)
     if user_channel_status["status"] != 'left':
         logger.info('c каналом все гуд')

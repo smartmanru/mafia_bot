@@ -5,31 +5,26 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
-from aiogram.types.reply_keyboard import KeyboardButton
 from aiogram.utils.callback_data import CallbackData
-from aiogram.utils.markdown import text
 from data.config import ADMINS as ad
 from keyboards.default.main_keyboard import keyboard
 from loader import bot
 from loguru import logger
 from utils import DialogCalendar
-from utils.db_api.psql import (afisha_new, all_msg, checkid, db_check_reg,
-                               get_afisha, get_afisha_id, get_count, insert_id, update_id, del_mp_db)
+from utils.db_api.psql import (db_af_new, db_log_upd, db_idu_chk_reg, db_reg_sel_all_user,
+                               db_af_sel, db_af_sel_id, db_idu_sel_count, db_idu_new_zap, db_idu_upd_pay, db_idu_del)
 from utils.inline_timepick import InlineTimepicker
-from utils.utils_kb import create_button as cr_bt
-from utils.utils_kb import create_inline_callback_button as cr_incb
-from utils.utils_kb import create_inline_keyboard as cr_in_kb
-from utils.utils_kb import create_keyboard as cr_kb
+from utils.geocoder import geocoder
 
 inline_timepicker = InlineTimepicker()
 
 
 async def info_photo(msg: Message):
-    logger.info(msg.photo[len(msg.photo)-1].file_id)
+    logger.info(msg.photo[len(msg.photo) - 1].file_id)
 
 
 def get_afish():
-    k = get_afisha()
+    k = db_af_sel()
 
     afish = []
     for d in range(len(k)):
@@ -43,7 +38,7 @@ def get_afish():
         j["loc"] = k[d][4]
         j["date"] = k[d][5]
         j["photo"] = k[d][6]
-        j['idushie'] = get_count(k[d][0])
+        j['idushie'] = db_idu_sel_count(k[d][0])
         afish.append(j)
     pages_number = len(k)
     return afish
@@ -81,6 +76,8 @@ locat = CallbackData("log", "lat")
 cou = CallbackData("page", "count")
 req_pay = CallbackData("act", "id", "afish")
 delcb = CallbackData("del", "id")
+
+
 # startafisha
 
 
@@ -101,7 +98,7 @@ async def mp(message: types.Message):
 
 # навигация по карточкаа
 async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
-    all_msg(msg=query.message, callback=query, state=state)
+    db_log_upd(msg=query.message, callback=query, state=state)
 
     logger.info(query.data)
     plagination_keyboard_list = []
@@ -110,7 +107,6 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
 
     page = int(callback_data["page"])
     vagons = int(callback_data["vagons"])
-    vagons_index = vagons+1
     pages_number = len(afish)
     index_page = page + 1
 
@@ -133,23 +129,22 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
         )
         plagination_keyboard_list.append(next_page_btn)
     b = afish[page]['loc']
-    # logger.info(type(b))
 
     count_keyboard = []
     if 5 > vagons > 0:
         vagons_minus_key = types.InlineKeyboardButton(
-            "-1", callback_data=applications_cb.new(page, vagons-1))
+            "-1", callback_data=applications_cb.new(page, vagons - 1))
         count_keyboard.append(vagons_minus_key)
     if vagons == 0:
         text = "Я не один"
         vagons_plus_key = types.InlineKeyboardButton(
-            text, callback_data=applications_cb.new(page, vagons+1))
+            text, callback_data=applications_cb.new(page, vagons + 1))
         count_keyboard.append(vagons_plus_key)
     else:
         if vagons == 5:
             text = "5-максимум"
             vagons_minus_key = types.InlineKeyboardButton(
-                "-1", callback_data=applications_cb.new(page, vagons-1))
+                "-1", callback_data=applications_cb.new(page, vagons - 1))
             count_keyboard.append(vagons_minus_key)
             vagons_count = types.InlineKeyboardButton(
                 text, callback_data=applications_cb.new(page, vagons))
@@ -159,7 +154,7 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
                 vagons, callback_data=applications_cb.new(page, vagons))
             count_keyboard.append(vagons_count)
             vagons_plus_key = types.InlineKeyboardButton(
-                "+1", callback_data=applications_cb.new(page, vagons+1))
+                "+1", callback_data=applications_cb.new(page, vagons + 1))
             count_keyboard.append(vagons_plus_key)
 
     location_key = types.InlineKeyboardButton(
@@ -169,9 +164,9 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
     keyboard_markup.row(*plagination_keyboard_list)
     keyboard_markup.row(*count_keyboard)
     keyboard_markup.row(location_key, cancel_key)
-    text = str(afish[page]["id_af"])+"\n"+afish[page]["name"] + "\n" + afish[page]["decr"]+"\n" + \
-        str(afish[page]["date"])+"\nЗаписано "+str(afish[page]
-                                                   ["idushie"])+" из "+str(afish[page]["max"])
+    text = str(afish[page]["id_af"]) + "\n" + afish[page]["name"] + "\n" + afish[page]["decr"] + "\n" + \
+           str(afish[page]["date"]) + "\nЗаписано " + str(afish[page]
+                                                          ["idushie"]) + " из " + str(afish[page]["max"])
     if str(query.message.chat.id) in ad:
         del_key = types.InlineKeyboardButton(
             "Удалить", callback_data=delcb.new(afish[page]["id_af"]))
@@ -183,7 +178,7 @@ async def pages(query: types.CallbackQuery, state: FSMContext, callback_data: ty
 
 async def del_mp(query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]):
     id = callback_data["id"]
-    del_mp_db(int(id))
+    db_idu_del(int(id))
     await query.message(text="Вы удалили событие нажмите /start для продолжение")
 
 
@@ -234,18 +229,18 @@ async def afisha_view(msg: Message, state: FSMContext):
     count_keyboard = []
     if 5 > vagons > 0:
         vagons_minus_key = types.InlineKeyboardButton(
-            "-1", callback_data=applications_cb.new(page, vagons-1))
+            "-1", callback_data=applications_cb.new(page, vagons - 1))
         count_keyboard.append(vagons_minus_key)
     if vagons == 0:
         text = "Я не один"
         vagons_plus_key = types.InlineKeyboardButton(
-            text, callback_data=applications_cb.new(page, vagons+1))
+            text, callback_data=applications_cb.new(page, vagons + 1))
         count_keyboard.append(vagons_plus_key)
     else:
         if vagons == 5:
             text = "5-максимум"
             vagons_minus_key = types.InlineKeyboardButton(
-                "-1", callback_data=applications_cb.new(page, vagons-1))
+                "-1", callback_data=applications_cb.new(page, vagons - 1))
             count_keyboard.append(vagons_minus_key)
             vagons_count = types.InlineKeyboardButton(
                 text, callback_data=applications_cb.new(page, vagons))
@@ -255,7 +250,7 @@ async def afisha_view(msg: Message, state: FSMContext):
                 vagons, callback_data=applications_cb.new(page, vagons))
             count_keyboard.append(vagons_count)
             vagons_plus_key = types.InlineKeyboardButton(
-                "+1", callback_data=applications_cb.new(page, vagons+1))
+                "+1", callback_data=applications_cb.new(page, vagons + 1))
             count_keyboard.append(vagons_plus_key)
 
     location_key = types.InlineKeyboardButton(
@@ -265,9 +260,9 @@ async def afisha_view(msg: Message, state: FSMContext):
     keyboard_markup.row(*plagination_keyboard_list)
     keyboard_markup.row(*count_keyboard)
     keyboard_markup.row(location_key, cancel_key)
-    text = str(afish[page]["id_af"])+"\n"+afish[page]["name"] + "\n" + afish[page]["decr"]+"\n" + \
-        str(afish[page]["date"])+"\nЗаписано "+str(afish[page]
-                                                   ["idushie"])+" из "+str(afish[page]["max"])
+    text = str(afish[page]["id_af"]) + "\n" + afish[page]["name"] + "\n" + afish[page]["decr"] + "\n" + \
+           str(afish[page]["date"]) + "\nЗаписано " + str(afish[page]
+                                                          ["idushie"]) + " из " + str(afish[page]["max"])
     if str(msg.chat.id) in ad:
         del_key = types.InlineKeyboardButton(
             "Удалить", callback_data=delcb.new(afish[page]["id_af"]))
@@ -280,7 +275,7 @@ async def afisha_view(msg: Message, state: FSMContext):
 
 
 async def send_loc(
-    query: CallbackQuery, state: FSMContext
+        query: CallbackQuery, state: FSMContext
 ):
     b = query.data.split(":")
     l = b[1].split()
@@ -290,7 +285,7 @@ async def send_loc(
 
 
 async def btm(
-    query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
+        query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
 ):
     key = await keyboard([["Правила"], ["Афиша", "Рейтинг"], ["Настройки"]])
     await query.message.answer(
@@ -310,10 +305,10 @@ async def coun(query: types.CallbackQuery, state: FSMContext, callback_data: typ
 
 
 async def zapis_cb(
-    query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
+        query: types.CallbackQuery, state: FSMContext, callback_data: typing.Dict[any, any]
 ):
     logger.info(query)
-    u = db_check_reg(query.from_user.id)
+    u = db_reg_sel_all_user(query.from_user.id)
     keyboard_markup = types.InlineKeyboardMarkup()
 
     if u[0][7] is None:
@@ -324,7 +319,7 @@ async def zapis_cb(
         l = query.data.split(":")
         k = l[1]
         s = l[2]
-        m = checkid(query.from_user.id, int(k))
+        m = db_idu_chk_reg(query.from_user.id, int(k))
         logger.info(m)
         if not m == []:
             if m[0][5]:
@@ -333,16 +328,19 @@ async def zapis_cb(
                 await query.message.answer('Вы еще не оплатили это мероприятие')
         else:
             key = []
-            insert_id(query.from_user.id, int(k), int(s),)
+            db_idu_new_zap(query.from_user.id, int(k), int(s), )
             a = types.InlineKeyboardButton(
                 text="Оплатить", url='tg://user?id=1616662464')
             b = types.InlineKeyboardMarkup(row_width=1)
-            id = get_afisha_id(int(k))
+            id = db_af_sel_id(int(k))
             nameMp = id[0][0]
             date = str(id[0][1])
             b.add(a)
-            text = "Пользователь @"+u[0][0]+"\n создал заявку на оплату."+nameMp + " на дату "+date+"\n Его данные:\nФИО-"+u[0][1]+"\n"+u[0][2]+"\nВозраст: "+str(
-                u[0][3])+"\nПрофессия:"+u[0][4]+"\nДоход от "+u[0][5]+"\nНомер телефона: "+u[0][6]+"\nИгровой ник:"+u[0][7]+"\nОн с собой привел +"+s
+            text = "Пользователь @" + u[0][
+                0] + "\n создал заявку на оплату." + nameMp + " на дату " + date + "\n Его данные:\nФИО-" + u[0][
+                       1] + "\n" + u[0][2] + "\nВозраст: " + str(
+                u[0][3]) + "\nПрофессия:" + u[0][4] + "\nДоход от " + u[0][5] + "\nНомер телефона: " + u[0][
+                       6] + "\nИгровой ник:" + u[0][7] + "\nОн с собой привел +" + s
 
             suc = types.InlineKeyboardButton(text="Одобрить", callback_data=req_pay.new(
                 query.from_user.id, int(k)))
@@ -352,7 +350,8 @@ async def zapis_cb(
             # key.append(cancel)
             keyboard_markup.row(suc)
             await bot.send_message(chat_id=881691, text=text, reply_markup=keyboard_markup)
-            await query.message.answer(reply_markup=b, text="Вы записаны на мероприятие. Для оплаты нажмите на кнопку и запросите оплату")
+            await query.message.answer(reply_markup=b,
+                                       text="Вы записаны на мероприятие. Для оплаты нажмите на кнопку и запросите оплату")
 
 
 async def confirm(query: types.CallbackQuery, callback_data: typing.Dict[any, any]
@@ -360,13 +359,12 @@ async def confirm(query: types.CallbackQuery, callback_data: typing.Dict[any, an
     l = list(query.data.split(":"))
     k = l[1]
     s = l[2]
-    logger.info(k+s)
-    update_id(int(k), int(s))
+    logger.info(k + s)
+    db_idu_upd_pay(int(k), int(s))
     await bot.send_message(chat_id=k, text="Оплата прошла и подтверждена нажмите /start для продолжения")
 
 
 async def cb_bt(message: Message, state: FSMContext):
-
     if not str(message.from_user.id) in ad:
         await message.answer("Вы не Админ")
     else:
@@ -395,18 +393,31 @@ async def decr(msg: Message, state: FSMContext):
 
 async def loc(msg: Message, state: FSMContext):
     async with state.proxy() as data:
-        data["location"] = [msg.location.latitude, msg.location.longitude]
-        data["location_address"] = msg.venue.address
-        data["location_title"] = msg.venue.title
-    await msg.answer(
-        "Выберите дату: ", reply_markup=await DialogCalendar().start_calendar()
-    )
+        if msg.content_type == "text":
+            a = geocoder(msg.text)
 
-    await Afs.next()
+            l = a.split()
+            long = l[0]
+            lat = l[1]
+            data["location"]=[lat,long]
+            await msg.answer_location(longitude=long,latitude=lat)
 
+        elif msg.content_type == "venue":
+            data["location"] = [msg.location.latitude, msg.location.longitude]
+            data["location_address"] = msg.venue.address
+            data["location_title"] = msg.venue.title
+        elif msg.content_type == "location":
+            data["location"]=[msg.location.latitude,msg.location.longitude]
+        if data["location"]:
+            await msg.answer(
+                "Выберите дату: ", reply_markup=await DialogCalendar().start_calendar()
+            )
+
+            await Afs.next()
+        else:msg.answer("вы не ввели локацию")
 
 async def process_dialog_calendar(
-    callback_query: CallbackQuery, state: FSMContext, callback_data: dict
+        callback_query: CallbackQuery, state: FSMContext, callback_data: dict
 ):
     selected, date = await DialogCalendar().process_selection(
         callback_query, callback_data
@@ -431,7 +442,7 @@ async def process_dialog_calendar(
 
 
 async def cb_handler(
-    query: types.CallbackQuery, callback_data: dict[str, str], state: FSMContext
+        query: types.CallbackQuery, callback_data: dict[str, str], state: FSMContext
 ):
     await query.answer()
     handle_result = inline_timepicker.handle(query.from_user.id, callback_data)
@@ -451,7 +462,7 @@ async def cb_handler(
         logger.info(await state.get_state())
         async with state.proxy() as data:
             data["time"] = str(handle_result.hour) + ":" + \
-                f"{handle_result.minute:02}"
+                           f"{handle_result.minute:02}"
             await Afs.next()
             logger.info(await state.get_state())
 
@@ -477,23 +488,22 @@ async def mx_user(msg: Message, state: FSMContext):
 
 
 async def pick_photo(msg: Message, state: FSMContext):
-
     async with state.proxy() as data:
-        b = len(msg.photo)-1
+        b = len(msg.photo) - 1
         data["photo_id"] = msg.photo[b].file_id
         dt = datetime.datetime.strptime(
             (data["date"]) + " " + data["time"], "%d-%m-%Y %H:%M"
         )
         # dates = datetime.datetime.strptime((data['date']), "%d-%m-%Y%")
         txt = (
-            "Мероприятие: "
-            + data["mp_name"]
-            + "\n"
-            + "Расположенной на карте "
-            + data["decr"]+"\n"
-            + "\nМакс игроков:"
-            + data["mx_user"]
-            + "\nCоздано"
+                "Мероприятие: "
+                + data["mp_name"]
+                + "\n"
+                + "Расположенной на карте "
+                + data["decr"] + "\n"
+                + "\nМакс игроков:"
+                + data["mx_user"]
+                + "\nCоздано"
         )
         await msg.answer_location(data["location"][0], data["location"][1])
         await msg.answer(text=txt)
@@ -507,7 +517,7 @@ async def pick_photo(msg: Message, state: FSMContext):
         )
         logger.info(sql)
         # try:
-        afisha_new(
+        db_af_new(
             dt,
             str(data["location"][0]) + " " + str(data["location"][1]),
             data["decr"],

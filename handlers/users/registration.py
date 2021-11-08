@@ -3,7 +3,7 @@ import random
 import typing
 import uuid
 from re import M
-from utils.db_api.psql import db_reg
+from utils.db_api.psql import db_reg_upd
 from aiogram import types
 from aiogram.dispatcher import FSMContext, storage
 from aiogram.dispatcher.filters.state import State, StatesGroup
@@ -215,7 +215,7 @@ async def ph_num(msg: types.Contact, state: FSMContext):
             + data["dohod"]
             + "\nНомер телефона: "
             + data["ph_num"]
-            + "\n\nВаш профиль телеграмма и ваше фото будет использоваться в списке участников оплатившую данную игру.\n \nВсе верно?",
+            + "\n\nВаш профиль телеграмма и ваше фото будет использоваться в списке участников оплативших данную игру.\n \nВсе верно?",
             reply_markup=inline_kb1,
         )
         await User.next()
@@ -273,7 +273,7 @@ async def exec_cb(
                 k[b[q]] = l[q]
             logger.info(k)
             # await msg.answer(k, reply_markup=ReplyKeyboardRemove())
-        db_reg(
+        db_reg_upd(
             query.from_user.id,
             k.get("fio"),
             k.get("city"),
